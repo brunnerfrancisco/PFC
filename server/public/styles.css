@@ -1,0 +1,17 @@
+html{
+    font-size: 1rem;
+}
+
+body {
+    background: #E8E8E8;
+}
+
+.celda {
+    border-radius: 10px;
+    width: 60px;
+    height: 40px;
+}
+
+.fila {
+    height: 40px;
+}

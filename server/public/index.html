@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>
+		NodeJS - Arduino
+	</title>
+	
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+	<header class="blog-header py-3 flex-nowrap text-center">
+		<h1>La Isla del Tesoro</h1>
+	</header>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-8 justify-content-center align-items-center">
+				<table id="tabla_mapa" style="margin:auto;">
+					<tbody id="body_tabla_mapa"></tbody>
+				</table>
+			</div>
+			<div class="col-md-4">
+				<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
+					style="margin:auto;">
+					<div class="card-header card-block">Estado Inicial</div>
+					<div class="card-body">
+						<h5 class="card-title">Posición</h5>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="inputGroup-sizing-sm">X</span>
+							</div>
+							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada X"
+								aria-describedby="inputGroup-sizing-sm" id="pos_x_ei" required>
+							<div class="invalid-feedback">
+								Coordenada Invalida
+							</div>
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="inputGroup-sizing-sm">Y</span>
+							</div>
+							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada Y"
+								aria-describedby="inputGroup-sizing-sm" id="pos_y_ei" required>
+							<div class="invalid-feedback">
+								Coordenada Invalida
+							</div>
+						</div>
+						<h5 class="card-title">Orientación</h5>
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<label class="input-group-text" for="inputOrientacion">Orientación</label>
+							</div>
+							<select class="custom-select" id="inputOrientacion" required>
+								<option value="N" selected>Norte</option>
+								<option value="O">Oeste</option>
+								<option value="S">Sur</option>
+								<option value="E">Este</option>
+							</select>
+							<div class="invalid-feedback">
+								Orientacion Requerida
+							</div>
+						</div>
+						<button class="btn-primary btn-block rounded" id="btn_cargar_mapa">Cargar
+							Mapa</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6 px-2 mb-4">
+				
+				<div class="card px-3 text-white rounded bg-dark align-items-center card-block">
+					<div class="card-header text-center" style="width: 100%;">Humano</div>
+					<div class="card-body" style="width: 100%;">
+						<h5 class="card-title">Acciones</h5>
+						<div class="row">
+							<div class="col-md-6 justify-content-center input-group">
+								<button class="btn-primary btn-block rounded text-center mb-3" id="btn_avanzar">Avanzar</button>
+								<button class="btn-primary btn-block rounded text-center mb-3" id="btn_saltar">Saltar</button>
+								<h5 class="card-title text-center">Levantar</h5>
+								<div class="input-group mb-3 justify-content-center">
+									<button class="btn-primary rounded text-center mx-2" id="btn_levantar_llave">LLave</button>
+									<button class="btn-primary rounded text-center mx-2" id="btn_levantar_pala">Pala</button>
+								</div>
+							</div>
+
+							<div class="col-md-6 justify-content-center">
+								<div class="input-group mb-3 justify-content-center">
+									<button class="btn-primary rounded text-center" value="N" id="btn_girar_n">Girar N</button>
+								</div>
+								<div class="input-group mb-3 justify-content-center">
+									<button class="btn-primary rounded mx-2" value="O" id="btn_girar_o">Girar O</button>
+									<button class="btn-primary rounded mx-2" value="E" id="btn_girar_e">Girar E</button>
+								</div>
+								<div class="input-group mb-3 justify-content-center">
+									<button class="btn-primary rounded text-center" value="S" id="btn_girar_s">Girar S</button>
+								</div>
+							</div>
+						</div>
+						
+
+
+
+					</div>
+				</div>
+				
+			</div>
+
+			<div class="col-md-6 px-2 mb-4">
+				<div class="p-3 p-md-5 text-white rounded bg-dark">
+					Aca va lo de los turnos
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6 px-2">
+				Aca van el estado del humano
+			</div>
+			<div class="col-md-6 px-2">
+				Aca van el estado de la IA
+			</div>
+		</div>
+	</div>
+	<div id="imagenes" hidden>
+		<img id="arrow_north" src="images/arrow_north.png" style="width:15px; height:15px;">
+		<img id="arrow_south" src="images/arrow_south.png" style="width:15px; height:15px;">
+		<img id="arrow_east"  src="images/arrow_east.png"  style="width:15px; height:15px;">
+		<img id="arrow_west"  src="images/arrow_west.png"  style="width:15px; height:15px;">
+	</div>
+	<script src="socket.io/socket.io.js" charset="utf-8"></script>
+	<script src="js.js" charset="utf-8"></script>
+</body>
+
+</html>
