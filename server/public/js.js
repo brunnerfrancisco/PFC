@@ -68,18 +68,15 @@ function cargar_mapa() {
 	let tabla = document.getElementById('body_tabla_mapa');
 	var i = 1, j = 1;
 	var row, col;
-	socket.emit('cargar_mapa', {pos_x_ei, pos_y_ei},
-	({ positions_x_y, valid, objetos }) => {
-		if(valid){
-			positions = positions_x_y['positions'];
-			maxX = positions_x_y['max_X_Y']['max_x'];
-			maxY = positions_x_y['max_X_Y']['max_y'];
-			elementos = objetos;
-			console.log(positions_x_y);
-			/* positions.forEach((pos) => {
-				console.log(pos);
-			}); */
 
+	/* CALLBACK Servidor */
+	socket.emit('cargar_mapa', {pos_x_ei, pos_y_ei},
+	({ positions_maximos, valid, objetos }) => {
+		if(valid){
+			positions = positions_maximos['positions'];
+			maxX = positions_maximos['maximos']['max_x'];
+			maxY = positions_maximos['maximos']['max_y'];
+			elementos = objetos;
 			while (i <= maxX) {
 				row = document.createElement('tr');
 				row.setAttribute('class', 'my-3');
