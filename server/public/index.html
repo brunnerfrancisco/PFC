@@ -70,7 +70,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="row">
+		<div class="card-deck">
 			<div class="col-md-6 px-2 mb-4">
 				
 				<div class="card px-3 text-white rounded bg-dark align-items-center card-block">
@@ -116,9 +116,38 @@
 				</div>
 			</div>
 		</div>
-		<div class="row">
+		<div class="card-deck">
 			<div class="col-md-6 px-2">
-				Aca van el estado del humano
+				<div class="card px-3 text-white rounded bg-dark align-items-center card-block">
+					<div class="card-header text-center" style="width: 100%;">Estado - Humano</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Posición</div>
+						<ul>
+							<li>X = <span id="estado_pos_x"></span></li>
+							<li>Y = <span id="estado_pos_y"></span></li>
+						</ul>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Orientación</div>
+						<span id="estado_orientacion"></span>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Camino</div>
+						<ul id="estado_camino"></ul>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Costo</div>
+						<span id="estado_costo"></span>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Llaves</div>
+						<ul id="estado_llaves"></ul>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Palas</div>
+						<ul id="estado_palas"></ul>
+					</div>
+				</div>
 			</div>
 			<div class="col-md-6 px-2">
 				Aca van el estado de la IA
@@ -130,6 +159,10 @@
 		<img id="arrow_south" src="images/arrow_south.png" style="width:15px; height:15px;">
 		<img id="arrow_east"  src="images/arrow_east.png"  style="width:15px; height:15px;">
 		<img id="arrow_west"  src="images/arrow_west.png"  style="width:15px; height:15px;">
+		<img id="pala_image" src="images/pala.svg" style="width:15px; height:15px;">
+		<img id="llave_image" src="images/key.svg" style="width:15px; height:15px;">
+		<img id="refugio_image" src="images/tent.svg" style="width:15px; height:15px;">
+		<img id="obstaculo_image" src="images/box.svg" style="width:15px; height:15px;">
 	</div>
 	<script src="socket.io/socket.io.js" charset="utf-8"></script>
 	<script src="js.js" charset="utf-8"></script>

@@ -3,37 +3,59 @@ const socket = io();
 var estadoActual = {};
 
 var elementos = {};
+var mapa_cargado = false;
 
-function cargarObjetos(pos_x, pos_y, refugios, obstaculos, llaves, palas, col) {
+function cargarObjetos(pos_x, pos_y, col) {
+	let {refugios, obstaculos, llaves, palas} = elementos;
+	let img;
 	refugios.forEach((refugio) => {
 		if (refugio['pos_x'] == pos_x && refugio['pos_y'] == pos_y) {
-			col.innerHTML = '<h5 id="' + refugio["name"] + '">' + refugio['name'] + '</h5>';
+			//col.innerHTML = '<h5 id="' + refugio["name"] + '">' + refugio['name'] + '</h5>';
+			img = document.createElement('img');
+			img.setAttribute('src','images/tent.svg');
+			img.setAttribute('id',refugio["name"]+'_image');
+			img.setAttribute('style','width:15px; height:15px;');
+			col.appendChild(img);
 		}
 	});
 	obstaculos.forEach((obstaculo) => {
 		if (obstaculo['pos_x'] == pos_x && obstaculo['pos_y'] == pos_y) {
-			col.innerHTML = '<h5 id="' + obstaculo["name"] + '">' + obstaculo['name'] + '</h5>';
+			//col.innerHTML = '<h5 id="' + obstaculo["name"] + '">' + obstaculo['name'] + '</h5>';
+			//img = document.getElementById('obstaculo_image');
+			img = document.createElement('img');
+			img.setAttribute('src','images/box.svg');
+			img.setAttribute('id',obstaculo["name"]+'_image');
+			img.setAttribute('style','width:15px; height:15px;');
+			col.appendChild(img);
 		}
 	});
 	llaves.forEach((llave) => {
 		if (llave['pos_x'] == pos_x && llave['pos_y'] == pos_y) {
-			col.innerHTML = '<h5 id="' + llave["name"] + '">' + llave['name'] + '</h5>';
+			//col.innerHTML = '<h5 id="' + llave["name"] + '">' + llave['name'] + '</h5>';
+			//img = document.getElementById('llave_image');
+			img = document.createElement('img');
+			img.setAttribute('src','images/key.svg');
+			img.setAttribute('id',llave["name"]+'_image');
+			img.setAttribute('style','width:15px; height:15px;');
+			col.appendChild(img);
 		}
 	});
 	palas.forEach((pala) => {
 		if (pala['pos_x'] == pos_x && pala['pos_y'] == pos_y) {
-			col.innerHTML = '<h5 id="' + pala["name"] + '">' + pala['name'] + '</h5>';
+			//col.innerHTML = '<h5 id="' + pala["name"] + '">' + pala['name'] + '</h5>';
+			//img = document.getElementById('pala_image');
+			img = document.createElement('img');
+			img.setAttribute('src','images/pala.svg');
+			img.setAttribute('id',pala["name"]+'_image');
+			img.setAttribute('style','width:15px; height:15px;');
+			col.appendChild(img);
 		}
 	});
 }
 
-socket.on('pos_mapa', function ({ positions_x_y, objetos }) {
-	let positions = positions_x_y['positions'];
+function cargar_mapa() {
+	let positions;
 	let maxX, maxY;
-	maxX = positions_x_y['max_X_Y']['max_x'];
-	maxY = positions_x_y['max_X_Y']['max_y'];
-	let { refugios, obstaculos, llaves, palas } = objetos;
-	elementos = { refugios, obstaculos, llaves, palas };
 	let estadoInicial = {};
 	let pos_x_ei = document.getElementById('pos_x_ei').value;
 	let pos_y_ei = document.getElementById('pos_y_ei').value;
@@ -41,75 +63,118 @@ socket.on('pos_mapa', function ({ positions_x_y, objetos }) {
 	estadoInicial['posicion'] = { pos_x: parseInt(pos_x_ei), pos_y: parseInt(pos_y_ei) };
 	estadoInicial['orientacion'] = orientacion_ei;
 	estadoInicial['poseciones'] = { llaves: [], palas: [] };
+	estadoInicial['camino'] = [];
+	estadoInicial['costo'] = 0;
 	let tabla = document.getElementById('body_tabla_mapa');
 	var i = 1, j = 1;
 	var row, col;
-	while (i <= maxX) {
-		row = document.createElement('tr');
-		row.setAttribute('class', 'my-3');
-		while (j <= maxY) {
-			col = document.createElement('td');
-			if (!positions['celda(' + i + ',' + j + ')']) {
-				col.setAttribute('class', 'celda ');
-			} else {
-				switch (positions['celda(' + i + ',' + j + ')']['suelo']) {
-					case 'firme': {
-						col.setAttribute('class', 'celda text-white bg-success mx-3 p-3 text-center');
-						cargarObjetos(i, j, refugios, obstaculos, llaves, palas, col);
-						break;
+	socket.emit('cargar_mapa', {pos_x_ei, pos_y_ei},
+	({ positions_x_y, valid, objetos }) => {
+		if(valid){
+			positions = positions_x_y['positions'];
+			maxX = positions_x_y['max_X_Y']['max_x'];
+			maxY = positions_x_y['max_X_Y']['max_y'];
+			elementos = objetos;
+			console.log(positions_x_y);
+			/* positions.forEach((pos) => {
+				console.log(pos);
+			}); */
+
+			while (i <= maxX) {
+				row = document.createElement('tr');
+				row.setAttribute('class', 'my-3');
+				while (j <= maxY) {
+					col = document.createElement('td');
+					if (!positions['celda(' + i + ',' + j + ')']) {
+						col.setAttribute('class', 'celda ');
+					} else {
+						switch (positions['celda(' + i + ',' + j + ')']['suelo']) {
+							case 'firme': {
+								col.setAttribute('class', 'celda text-white bg-success mx-3 p-3 text-center');
+								cargarObjetos(i, j, col);
+								break;
+							}
+							case 'lava': {
+								col.setAttribute('class', 'celda text-white bg-danger mx-3 p-3 text-center');
+								// si es lava no puede haber objectos asique ni siquiera llamo a la funcion
+								break;
+							}
+							case 'resbaladizo': {
+								col.setAttribute('class', 'celda text-white bg-warning mx-3 p-3 text-center');
+								cargarObjetos(i, j, col);
+								break;
+							}
+						}
+						if (estadoInicial['posicion']['pos_x'] == i && estadoInicial['posicion']['pos_y'] == j) {
+							let img;
+							switch (estadoInicial['orientacion']) {
+								case 'N': {
+									img = document.getElementById('arrow_north');
+									img.style.visibility = 'visible';
+									col.appendChild(img);
+									break;
+								}
+								case 'O': {
+									img = document.getElementById('arrow_west');
+									img.style.visibility = 'visible';
+									col.appendChild(img);
+									break;
+								}
+								case 'S': {
+									img = document.getElementById('arrow_south');
+									img.style.visibility = 'visible';
+									col.appendChild(img);
+									break;
+								}
+								case 'E': {
+									img = document.getElementById('arrow_east');
+									img.style.visibility = 'visible';
+									col.appendChild(img);
+									break;
+								}
+							}
+						}
 					}
-					case 'lava': {
-						col.setAttribute('class', 'celda text-white bg-danger mx-3 p-3 text-center');
-						// si es lava no puede haber objectos asique ni siquiera llamo a la funcion
-						break;
-					}
-					case 'resbaladizo': {
-						col.setAttribute('class', 'celda text-white bg-warning mx-3 p-3 text-center');
-						cargarObjetos(i, j, refugios, obstaculos, llaves, palas, col);
-						break;
-					}
+					col.setAttribute('id', 'celda(' + i + ',' + j + ')');
+					row.appendChild(col);
+					j++;
 				}
-				if (estadoInicial['posicion']['pos_x'] == i && estadoInicial['posicion']['pos_y'] == j) {
-					let img;
-					switch (estadoInicial['orientacion']) {
-						case 'N': {
-							img = document.getElementById('arrow_north');
-							img.style.visibility = 'visible';
-							col.appendChild(img);
-							break;
-						}
-						case 'O': {
-							img = document.getElementById('arrow_west');
-							img.style.visibility = 'visible';
-							col.appendChild(img);
-							break;
-						}
-						case 'S': {
-							img = document.getElementById('arrow_south');
-							img.style.visibility = 'visible';
-							col.appendChild(img);
-							break;
-						}
-						case 'E': {
-							img = document.getElementById('arrow_east');
-							img.style.visibility = 'visible';
-							col.appendChild(img);
-							break;
-						}
-					}
-				}
+				tabla.appendChild(row);
+				j = 1;
+				i++;
 			}
-			col.setAttribute('id', 'celda(' + i + ',' + j + ')');
-			row.appendChild(col);
-			j++;
+			estadoActual = estadoInicial;
+			document.getElementById('btn_cargar_mapa').setAttribute('disabled', 'true');
+			document.getElementById('btn_cargar_mapa').setAttribute('class', 'btn-disabled btn-block rounded ');
+			mapa_cargado = true;
+		} else {
+			console.log("ERROR Cargar Mapa: La Posición indicada no es válida");
 		}
-		tabla.appendChild(row);
-		j = 1;
-		i++;
-	}
-	estadoActual = estadoInicial;
-	document.getElementById('btn_cargar_mapa').setAttribute('disabled', 'true');
-});
+	});
+}
+
+function actualizarEstado() {
+	document.getElementById('estado_pos_x').innerHTML = estadoActual['posicion']['pos_x'];
+	document.getElementById('estado_pos_y').innerHTML = estadoActual['posicion']['pos_y'];
+	document.getElementById('estado_orientacion').innerHTML = estadoActual['orientacion'];
+	var html_camino = "";
+	estadoActual['camino'].forEach((camino) => {
+		html_camino = html_camino + "<li>" + camino + "</li>";
+	});
+	document.getElementById('estado_camino').innerHTML = html_camino;
+	document.getElementById('estado_costo').innerHTML = estadoActual['costo'];
+	var html_llaves = "";
+	estadoActual['poseciones']['llaves'].forEach((llave) => {
+		html_llaves = html_llaves + "<li>llave(" + llave['name'] + "," + llave['accesos'] + ")</li>";
+	});
+	document.getElementById('estado_llaves').innerHTML = html_llaves;
+	var html_palas = "";
+	estadoActual['poseciones']['palas'].forEach((pala) => {
+		html_palas = html_palas + "<li>pala(" + pala['name'] + ")</li>";
+	});
+	document.getElementById('estado_palas').innerHTML = html_palas;
+	//console.log(estadoActual);
+}
 
 function actualizarEstadoTablaAvanzar(NewState) {
 	let old_celda = document.getElementById('celda(' + estadoActual['posicion']['pos_x'] + ',' + estadoActual['posicion']['pos_y'] + ')');
@@ -117,14 +182,16 @@ function actualizarEstadoTablaAvanzar(NewState) {
 	old_celda.removeChild(old_image);
 	let new_celda = document.getElementById('celda(' + NewState['posicion']['pos_x'] + ',' + NewState['posicion']['pos_y'] + ')');
 	new_celda.appendChild(old_image);
-	estadoActual['posicion'] = NewState['posicion'];
-	estadoActual['orientacion'] = NewState['orientacion'];
-	estadoActual['poseciones'] = NewState['poseciones'];
+	// actualizo el estado
+	estadoActual = NewState;
+	//console.log(estadoActual);
+	actualizarEstado();
 }
 
 function changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, codigoRefugio) {
 	let NewState = {};
 	// si uso una llave para avanzar a un refugio actualizo la cantidad de accesos a una llave
+	NewState['orientacion'] = estadoActual['orientacion'];
 	NewState['poseciones'] = estadoActual['poseciones'];
 	if (codigoRefugio == 2) {
 		let indice_mod = 0;
@@ -139,8 +206,19 @@ function changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, codigoRefugio) {
 	switch (suelo) {
 		case 'firme': {
 			NewState['posicion'] = { pos_x: pos_x_futura, pos_y: pos_y_futura };
-			NewState['orientacion'] = estadoActual['orientacion'];
-			NewState['poseciones'] = estadoActual['poseciones'];
+			// actualizo el costo
+			// si hay refugio costo +2
+			if (codigoRefugio == 1 || codigoRefugio == 2) {
+				NewState['costo'] = estadoActual['costo'] + 2;
+			} else { // si no hay refugio costo +1
+				if (codigoRefugio == 0) {
+					NewState['costo'] = estadoActual['costo'] + 1;
+				}
+			}
+			// actualizo el camino
+			//console.log(estadoActual);
+			NewState['camino'] = estadoActual['camino'];
+			NewState['camino'].push('avanzar(celda(' + pos_x_futura + ',' + pos_y_futura + '))');
 			actualizarEstadoTablaAvanzar(NewState);
 			break;
 		}
@@ -150,8 +228,12 @@ function changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, codigoRefugio) {
 		}
 		case 'resbaladizo': {
 			NewState['posicion'] = { pos_x: pos_x_futura, pos_y: pos_y_futura };
-			NewState['orientacion'] = estadoActual['orientacion'];
-			NewState['poseciones'] = estadoActual['poseciones'];
+			// actualizo el costo
+			// el costo por caer en resbaladizo es costo +2
+			NewState['costo'] = estadoActual['costo'] + 2;
+			// actualizo el camino
+			NewState['camino'] = estadoActual['camino'];
+			NewState['camino'].push('avanzar(celda(' + pos_x_futura + ',' + pos_y_futura + '))');
 			actualizarEstadoTablaAvanzar(NewState);
 			break;
 		}
@@ -159,64 +241,80 @@ function changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, codigoRefugio) {
 }
 
 function avanzar() {
-	let pos_x_futura, pos_y_futura;
-	let actual_x = estadoActual['posicion']['pos_x'];
-	let actual_y = estadoActual['posicion']['pos_y'];
-	switch (estadoActual['orientacion']) {
-		case 'N': {
-			pos_x_futura = actual_x - 1;
-			pos_y_futura = actual_y;
-			break;
+	if (mapa_cargado) {
+		let pos_x_futura, pos_y_futura;
+		let actual_x = estadoActual['posicion']['pos_x'];
+		let actual_y = estadoActual['posicion']['pos_y'];
+		switch (estadoActual['orientacion']) {
+			case 'N': {
+				pos_x_futura = actual_x - 1;
+				pos_y_futura = actual_y;
+				break;
+			}
+			case 'O': {
+				pos_x_futura = actual_x;
+				pos_y_futura = actual_y - 1;
+				break;
+			}
+			case 'S': {
+				pos_x_futura = actual_x + 1;
+				pos_y_futura = actual_y;
+				break;
+			}
+			case 'E': {
+				pos_x_futura = actual_x;
+				pos_y_futura = actual_y + 1;
+				break;
+			}
 		}
-		case 'O': {
-			pos_x_futura = actual_x;
-			pos_y_futura = actual_y - 1;
-			break;
-		}
-		case 'S': {
-			pos_x_futura = actual_x + 1;
-			pos_y_futura = actual_y;
-			break;
-		}
-		case 'E': {
-			pos_x_futura = actual_x;
-			pos_y_futura = actual_y + 1;
-			break;
-		}
-	}
-	// aca le pregunto al servidor por la posicion y me responde el ACK en la callback
-	socket.emit('check_avanzar', { pos_x_f: pos_x_futura, pos_y_f: pos_y_futura },
-		function ({ valid, suelo, obstaculo, refugio }) {
-			if (valid) {
-				if (!obstaculo['hayObstaculo']) {
-					// si no hay refugio o si el refugio no requiere llave o si requiere llave pero tengo una llave con accesos disponibles
-					if (!refugio['hayRefugio']) {
-						changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, 0);
-					} else {
-						if (refugio['reqLlave'] == 'no') {
-							changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, 1);
+		// aca le pregunto al servidor por la posicion y me responde el ACK en la callback
+		socket.emit('check_avanzar', { pos_x_f: pos_x_futura, pos_y_f: pos_y_futura },
+			function ({ valid, suelo, obstaculo, refugio }) {
+				if (valid) {
+					if (!obstaculo['hayObstaculo']) {
+						// si no hay refugio o si el refugio no requiere llave o si requiere llave pero tengo una llave con accesos disponibles
+						if (!refugio['hayRefugio']) {
+							changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, 0);
 						} else {
-							let tengoLlave = estadoActual['poseciones']['llaves'].some((llave, index) => {
-								return llave['accesos'] > 0;
-							});
-							if (tengoLlave) {
-								// hay que elegir una llave y decrementarle la cantidad de accesos
-								changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, 2);
+							if (refugio['reqLlave'] == 'no') {
+								// hay refugio que no requiere llave
+								changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, 1);
 							} else {
-								console.log('ERROR Avanzar: Refugio[' + refugio['name'] +
-									'] en celda(' + pos_x_futura + ',' + pos_y_futura + ') NO HAY LLAVE con Accesos');
+								let tengoLlave = estadoActual['poseciones']['llaves'].some((llave, index) => {
+									return llave['accesos'] > 0;
+								});
+								if (tengoLlave) {
+									// hay que elegir una llave y decrementarle la cantidad de accesos
+									changeStateAvanzar(suelo, pos_x_futura, pos_y_futura, 2);
+								} else {
+									console.log('ERROR Avanzar: Refugio[' + refugio['name'] +
+										'] en celda(' + pos_x_futura + ',' + pos_y_futura + ') NO HAY LLAVE con Accesos');
+								}
 							}
 						}
+					} else {
+						console.log('ERROR Avanzar: obstaculo [' + obstaculo['name'] +
+							'] en celda(' + pos_x_futura + ',' + pos_y_futura + ')');
 					}
-				} else {
-					console.log('ERROR Avanzar: obstaculo [' + obstaculo['name'] +
-						'] en celda(' + pos_x_futura + ',' + pos_y_futura + ')');
-				}
 
-			} else {
-				console.log('ERROR Saltar: NO EXISTE la Celda(' + pos_x_futura + ',' + pos_y_futura + ')');
-			}
-		});
+				} else {
+					console.log('ERROR Saltar: NO EXISTE la Celda(' + pos_x_futura + ',' + pos_y_futura + ')');
+				}
+			});
+	} else {
+		console.log("ERROR: El mapa no esta cargado");
+	}
+}
+
+function actualizarEstadoTablaSaltar(NewState) {
+	let old_celda = document.getElementById('celda(' + estadoActual['posicion']['pos_x'] + ',' + estadoActual['posicion']['pos_y'] + ')');
+	let old_image = old_celda.lastChild;
+	old_celda.removeChild(old_image);
+	let new_celda = document.getElementById('celda(' + NewState['posicion']['pos_x'] + ',' + NewState['posicion']['pos_y'] + ')');
+	new_celda.appendChild(old_image);
+	estadoActual['posicion'] = NewState['posicion'];
+	estadoActual['orientacion'] = NewState['orientacion'];
+	estadoActual['poseciones'] = NewState['poseciones'];
 }
 
 function changeStateSaltar(suelo, pos_x_futura, pos_y_futura, codigoLava) {
@@ -226,7 +324,7 @@ function changeStateSaltar(suelo, pos_x_futura, pos_y_futura, codigoLava) {
 			NewState['posicion'] = { pos_x: pos_x_futura, pos_y: pos_y_futura };
 			NewState['orientacion'] = estadoActual['orientacion'];
 			NewState['poseciones'] = estadoActual['poseciones'];
-			actualizarEstadoTablaAvanzar(NewState);
+			actualizarEstadoTablaSaltar(NewState);
 			break;
 		}
 		case 'lava': {
@@ -238,7 +336,7 @@ function changeStateSaltar(suelo, pos_x_futura, pos_y_futura, codigoLava) {
 				NewState['posicion'] = { pos_x: pos_x_futura, pos_y: pos_y_futura };
 				NewState['orientacion'] = estadoActual['orientacion'];
 				NewState['poseciones'] = estadoActual['poseciones'];
-				actualizarEstadoTablaAvanzar(NewState);
+				actualizarEstadoTablaSaltar(NewState);
 			} else {
 				console.log("ERROR Saltar: Celda(" + pos_x_futura + "," + pos_y_futura + ") no es firme");
 			}
@@ -248,113 +346,121 @@ function changeStateSaltar(suelo, pos_x_futura, pos_y_futura, codigoLava) {
 }
 
 function saltar() {
-	let pos_x_futura, pos_y_futura, pos_x_int, pos_y_int;
-	let actual_x = estadoActual['posicion']['pos_x'];
-	let actual_y = estadoActual['posicion']['pos_y'];
-	switch (estadoActual['orientacion']) {
-		case 'N': {
-			pos_x_futura = actual_x - 2;
-			pos_y_futura = actual_y;
-			pos_x_int = actual_x - 1;
-			pos_y_int = actual_y;
-			break;
-		}
-		case 'O': {
-			pos_x_futura = actual_x;
-			pos_y_futura = actual_y - 2;
-			pos_x_int = actual_x;
-			pos_y_int = actual_y - 1;
-			break;
-		}
-		case 'S': {
-			pos_x_futura = actual_x + 2;
-			pos_y_futura = actual_y;
-			pos_x_int = actual_x + 1;
-			pos_y_int = actual_y;
-			break;
-		}
-		case 'E': {
-			pos_x_futura = actual_x;
-			pos_y_futura = actual_y + 2;
-			pos_x_int = actual_x;
-			pos_y_int = actual_y + 1;
-			break;
-		}
-	}
-	// aca le pregunto al servidor por la posicion y me responde el ACK en la callback
-	socket.emit('check_saltar', { pos_x_f: pos_x_futura, pos_y_f: pos_y_futura, pos_x_i: pos_x_int, pos_y_i: pos_y_int },
-		function ({ valid, suelo, obstaculo, lava }) {
-			if (valid) {
-				if (obstaculo['hayObstaculo']) {
-					// puedo saltar si la altura del obstaculo es menor a 5
-					if (obstaculo['altura'] < 5) {
-						changeStateSaltar(suelo, pos_x_futura, pos_y_futura, 0);
-					} else {
-						console.log("ERROR Saltar: El obstaculo[" + obstaculo['name'] + "], Atura:" +
-							obstaculo['altura'] + " MUY ALTO");
-					}
-				}
-				else {
-					if (lava) {
-						changeStateSaltar(suelo, pos_x_futura, pos_y_futura, 1);
-					} else {
-						console.log("ERROR Saltar: Celda(" + pos_x_int + "," + pos_y_int + ") no hay lava ni obstaculo");
-					}
-
-				}
-			} else {
-				console.log('ERROR Saltar: No EXISTE la Celda(' + pos_x_futura + ',' + pos_y_futura + ')');
+	if (mapa_cargado) {
+		let pos_x_futura, pos_y_futura, pos_x_int, pos_y_int;
+		let actual_x = estadoActual['posicion']['pos_x'];
+		let actual_y = estadoActual['posicion']['pos_y'];
+		switch (estadoActual['orientacion']) {
+			case 'N': {
+				pos_x_futura = actual_x - 2;
+				pos_y_futura = actual_y;
+				pos_x_int = actual_x - 1;
+				pos_y_int = actual_y;
+				break;
 			}
-		});
+			case 'O': {
+				pos_x_futura = actual_x;
+				pos_y_futura = actual_y - 2;
+				pos_x_int = actual_x;
+				pos_y_int = actual_y - 1;
+				break;
+			}
+			case 'S': {
+				pos_x_futura = actual_x + 2;
+				pos_y_futura = actual_y;
+				pos_x_int = actual_x + 1;
+				pos_y_int = actual_y;
+				break;
+			}
+			case 'E': {
+				pos_x_futura = actual_x;
+				pos_y_futura = actual_y + 2;
+				pos_x_int = actual_x;
+				pos_y_int = actual_y + 1;
+				break;
+			}
+		}
+		// aca le pregunto al servidor por la posicion y me responde el ACK en la callback
+		socket.emit('check_saltar', { pos_x_f: pos_x_futura, pos_y_f: pos_y_futura, pos_x_i: pos_x_int, pos_y_i: pos_y_int },
+			function ({ valid, suelo, obstaculo, lava }) {
+				if (valid) {
+					if (obstaculo['hayObstaculo']) {
+						// puedo saltar si la altura del obstaculo es menor a 5
+						if (obstaculo['altura'] < 5) {
+							changeStateSaltar(suelo, pos_x_futura, pos_y_futura, 0);
+						} else {
+							console.log("ERROR Saltar: El obstaculo[" + obstaculo['name'] + "], Atura:" +
+								obstaculo['altura'] + " MUY ALTO");
+						}
+					}
+					else {
+						if (lava) {
+							changeStateSaltar(suelo, pos_x_futura, pos_y_futura, 1);
+						} else {
+							console.log("ERROR Saltar: Celda(" + pos_x_int + "," + pos_y_int + ") no hay lava ni obstaculo");
+						}
+
+					}
+				} else {
+					console.log('ERROR Saltar: No EXISTE la Celda(' + pos_x_futura + ',' + pos_y_futura + ')');
+				}
+			});
+	}
 }
 
 
 function levantar_llave() {
-	let hay_llave = false;
-	let index_llave_to_remove;
-	elementos['llaves'].forEach((llave, index) => {
-		if (llave['pos_x'] == estadoActual['posicion']['pos_x'] && llave['pos_y'] == estadoActual['posicion']['pos_y']) {
-			hay_llave = true;
-			index_llave_to_remove = index;
+	if (mapa_cargado) {
+		let index_llave_to_remove;
+		let hay_llave = elementos['llaves'].some((llave, index) => {
+			if (llave['pos_x'] == estadoActual['posicion']['pos_x'] && llave['pos_y'] == estadoActual['posicion']['pos_y']) {
+				index_llave_to_remove = index;
+				return true;
+			}
+		});
+		if (hay_llave) {
+			// agrego la llave a las poseciones del estadoActual
+			estadoActual['camino'].push('levantar_llave(' + elementos['llaves'][index_llave_to_remove]['name'] + ')');
+			estadoActual['poseciones']['llaves'].push(elementos['llaves'][index_llave_to_remove]);
+			// si hay llave la levanto no importa la cantidad de accesos
+			let celda = document.getElementById('celda(' + elementos['llaves'][index_llave_to_remove]['pos_x'] +
+				',' + elementos['llaves'][index_llave_to_remove]['pos_y'] + ')');
+			let llave = document.getElementById(elementos['llaves'][index_llave_to_remove]['name']+'_image');
+			celda.removeChild(llave);
+			elementos['llaves'].splice(index_llave_to_remove, 1);
+			actualizarEstado();
+			//console.log(estadoActual['poseciones']);
+		} else {
+			console.log('ERROR Levantar_Llave: No hay LLAVE');
 		}
-	});
-	if (hay_llave) {
-		// agrego la llave a las poseciones del estadoActual
-		estadoActual['poseciones']['llaves'].push(elementos['llaves'][index_llave_to_remove]);
-		// si hay llave la levanto no importa la cantidad de accesos
-		let celda = document.getElementById('celda(' + elementos['llaves'][index_llave_to_remove]['pos_x'] +
-			',' + elementos['llaves'][index_llave_to_remove]['pos_y'] + ')');
-		let llave = document.getElementById(elementos['llaves'][index_llave_to_remove]['name']);
-		celda.removeChild(llave);
-		elementos['llaves'].splice(index_llave_to_remove, 1);
-
-		//console.log(estadoActual['poseciones']);
-	} else {
-		console.log('No hay LLAVE');
 	}
 }
 
 function levantar_pala() {
-	let hay_pala = false;
-	let index_pala_to_remove;
-	elementos['palas'].forEach((pala, index) => {
-		// si en la pos actual hay una pala la saco de la GUI
-		if (pala['pos_x'] == estadoActual['posicion']['pos_x'] && pala['pos_y'] == estadoActual['posicion']['pos_y']) {
-			hay_pala = true;
-			index_pala_to_remove = index;
+	if (mapa_cargado) {
+		let index_pala_to_remove;
+		let hay_pala = elementos['palas'].some((pala, index) => {
+			// si en la pos actual hay una pala la saco de la GUI
+			if (pala['pos_x'] == estadoActual['posicion']['pos_x'] && pala['pos_y'] == estadoActual['posicion']['pos_y']) {
+				index_pala_to_remove = index;
+				return true;
+			}
+		});
+		if (hay_pala) {
+			// agrego la accion al camino
+			estadoActual['camino'].push('levantar_pala(' + elementos['palas'][index_pala_to_remove]['name'] + ')');
+			// agrego la pala a las poseciones del estadoActual
+			estadoActual['poseciones']['palas'].push(elementos['palas'][index_pala_to_remove]);
+			// si hay pala la levanto no importa la cantidad de accesos
+			let celda = document.getElementById('celda(' + elementos['palas'][index_pala_to_remove]['pos_x'] +
+				',' + elementos['palas'][index_pala_to_remove]['pos_y'] + ')');
+			let pala = document.getElementById(elementos['palas'][index_pala_to_remove]['name']+'_image');
+			celda.removeChild(pala);
+			elementos['palas'].splice(index_pala_to_remove, 1);
+			actualizarEstado();
+		} else {
+			console.log('No hay PALA');
 		}
-	});
-	if (hay_pala) {
-		// agrego la pala a las poseciones del estadoActual
-		estadoActual['poseciones']['palas'].push(elementos['palas'][index_pala_to_remove]);
-		// si hay pala la levanto no importa la cantidad de accesos
-		let celda = document.getElementById('celda_(' + elementos['palas'][index_pala_to_remove]['pos_x'] +
-			',' + elementos['palas'][index_pala_to_remove]['pos_y'] + ')');
-		let pala = document.getElementById(elementos['palas'][index_pala_to_remove]['name']);
-		celda.removeChild(pala);
-		elementos['palas'].splice(index_pala_to_remove, 1);
-	} else {
-		console.log('No hay PALA');
 	}
 }
 
@@ -382,41 +488,64 @@ function obtenerImagenDeCelda() {
 }
 
 function actualizarEstadoTablaGirar(value) {
-	//console.log(estadoActual);
-
-	let celda = document.getElementById('celda(' + estadoActual['posicion']['pos_x'] + ',' + estadoActual['posicion']['pos_y'] + ')');
-	let old_image = obtenerImagenDeCelda();
-	celda.removeChild(old_image);
-	document.getElementById('imagenes').appendChild(old_image);
-	let new_image;
-	switch (value) {
-		case 'N': {
-			new_image = document.getElementById('arrow_north');
-			break;
+	if (mapa_cargado) {
+		let celda = document.getElementById('celda(' + estadoActual['posicion']['pos_x'] + ',' + estadoActual['posicion']['pos_y'] + ')');
+		let old_image = obtenerImagenDeCelda();
+		celda.removeChild(old_image);
+		document.getElementById('imagenes').appendChild(old_image);
+		let new_image;
+		switch (value) {
+			case 'N': {
+				estadoActual['camino'].push('girar(N)');
+				if (estadoActual['orientacion'] == 'S') {
+					estadoActual['costo'] = estadoActual['costo'] + 2;
+				} else {
+					estadoActual['costo'] = estadoActual['costo'] + 1;
+				}
+				new_image = document.getElementById('arrow_north');
+				break;
+			}
+			case 'O': {
+				estadoActual['camino'].push('girar(O)');
+				if (estadoActual['orientacion'] == 'E') {
+					estadoActual['costo'] = estadoActual['costo'] + 2;
+				} else {
+					estadoActual['costo'] = estadoActual['costo'] + 1;
+				}
+				new_image = document.getElementById('arrow_west');
+				break;
+			}
+			case 'S': {
+				estadoActual['camino'].push('girar(S)');
+				if (estadoActual['orientacion'] == 'N') {
+					estadoActual['costo'] = estadoActual['costo'] + 2;
+				} else {
+					estadoActual['costo'] = estadoActual['costo'] + 1;
+				}
+				new_image = document.getElementById('arrow_south');
+				break;
+			}
+			case 'E': {
+				estadoActual['camino'].push('girar(E)');
+				if (estadoActual['orientacion'] == 'O') {
+					estadoActual['costo'] = estadoActual['costo'] + 2;
+				} else {
+					estadoActual['costo'] = estadoActual['costo'] + 1;
+				}
+				new_image = document.getElementById('arrow_east');
+				break;
+			}
 		}
-		case 'O': {
-			new_image = document.getElementById('arrow_west');
-			break;
-		}
-		case 'S': {
-			new_image = document.getElementById('arrow_south');
-			break;
-		}
-		case 'E': {
-			new_image = document.getElementById('arrow_east');
-			break;
-		}
+		estadoActual['orientacion'] = value;
+		celda.appendChild(new_image);
+		actualizarEstado();
 	}
-	estadoActual['orientacion'] = value;
-	celda.appendChild(new_image);
 }
 
 /*  ---------------------- OYENTES ------------------------------- */
 
 let btn_cargar_mapa = document.getElementById('btn_cargar_mapa');
-btn_cargar_mapa.addEventListener('click', () => {
-	socket.emit('cargar_mapa', null);
-});
+btn_cargar_mapa.addEventListener('click', cargar_mapa);
 
 let btn_avanzar = document.getElementById('btn_avanzar');
 btn_avanzar.addEventListener('click', avanzar);

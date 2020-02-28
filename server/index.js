@@ -21,7 +21,25 @@ server.listen(app.get('port'), () => {
 });
 
 function obtenerPosiciones() {
-
+let query = new swipl.Query('celda(Pos,Suelo).');
+		let ret = null;
+		let positions = {};
+		let maxX = 1, maxY = 1;
+		while (ret = query.next()) {
+			positions['celda(' + ret.Pos['head'] + ',' + ret.Pos['tail']['head'] + ')'] = {
+				pos_x: ret.Pos['head'],
+				pos_y: ret.Pos['tail']['head'],
+				suelo: ret.Suelo
+			}
+			// obtengo los maximos de filas y columnas
+			if (ret.Pos['head'] > maxX) {
+				maxX = ret.Pos['head'];
+			}
+			if (ret.Pos['tail']['head'] > maxY) {
+				maxY = ret.Pos['tail']['head'];
+			}
+		}
+		query.close();
 	return { positions, maxX, maxY };
 }
 
@@ -80,7 +98,7 @@ function obtenerObjetosEnMapa() {
 io.on('connection', function (socket) {
 	console.log('connection established', socket.id);
 
-	socket.on('cargar_mapa', () => {
+	socket.on('cargar_mapa', ( {pos_x_ei, pos_y_ei}, respuesta) => {
 		let query = new swipl.Query('celda(Pos,Suelo).');
 		let ret = null;
 		let positions = {};
@@ -100,12 +118,18 @@ io.on('connection', function (socket) {
 			}
 		}
 		query.close();
+		let valid = false;
+		query = new swipl.Query('celda(['+pos_x_ei+','+pos_y_ei+'],Suelo).');
+		ret = null;
+		if(ret = query.next()) {
+			valid = true;
+		}
+		query.close();
 		let max_X_Y = { max_x: maxX, max_y: maxY };
 		let positions_x_y = { positions, max_X_Y };
 		//let positions = obtenerPosiciones();
 		let objetos = obtenerObjetosEnMapa();
-		//console.log(positions_x_y);
-		socket.emit('pos_mapa', { positions_x_y, objetos });
+		respuesta({ positions_x_y, valid:valid, objetos });
 	});
 
 	socket.on('check_avanzar', ({ pos_x_f, pos_y_f }, respuesta) => {
