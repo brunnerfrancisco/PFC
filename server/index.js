@@ -4,17 +4,24 @@ const express = require('express');
 const socketIO = require('socket.io');
 const swipl = require('swipl');
 const SerialPort = require('serialport');
+const webpack = require('webpack');
+const webpackDevMiddleware = require('webpack-dev-middleware');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO.listen(server);
 const ReadLine = SerialPort.parsers.Readline;
+const config = require('./webpack.config.js');
 
-swipl.call('consult("busqueda.pl")');
+//swipl.call('working_directory("./IA",prolog)');
+swipl.call('consult("./busqueda.pl")');
 
 app.set('port', process.env.PORT || 1100);
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Middleware
+app.use(webpackDevMiddleware(webpack(config)));
 
 server.listen(app.get('port'), () => {
 	console.log('server listening on port', app.get('port'));
@@ -24,11 +31,22 @@ let query = null;
 let ret = null;
 
 function obtenerPosiciones() {
-	let positions = {};
-	let maxX = 1, maxY = 1;
-	query = new swipl.Query('celda(Pos,Suelo).');
+	let mapa = {};
+	//let positions = {};
+	//let maxX = 1, maxY = 1;
+	//query = new swipl.Query('celda(Pos,Suelo).');
+	query = new swipl.Query('celda([X,Y],Suelo).');
 	ret = null;
 	while (ret = query.next()) {
+		if(mapa['row'+ret.X] == undefined){
+			mapa['row'+ret.X] = {};
+		}
+		mapa['row'+ret.X]['col'+ret.Y] = {
+			pos_x: ret.X,
+			pos_y: ret.Y,
+			suelo: ret.Suelo
+		};
+		/* 
 		positions['celda(' + ret.Pos['head'] + ',' + ret.Pos['tail']['head'] + ')'] = {
 			pos_x: ret.Pos['head'],
 			pos_y: ret.Pos['tail']['head'],
@@ -40,12 +58,13 @@ function obtenerPosiciones() {
 		}
 		if (ret.Pos['tail']['head'] > maxY) {
 			maxY = ret.Pos['tail']['head'];
-		}
+		} */
 	}
+	//console.log(mapa);
 	query.close();
-	let maximos = { max_x: maxX, max_y: maxY };
-	let positions_maximos = { positions, maximos };
-	return positions_maximos;
+	//let maximos = { max_x: maxX, max_y: maxY };
+	//let positions_maximos = { positions, maximos };
+	return mapa;
 }
 
 function validarPosicionIncial(pos_x_ei,pos_y_ei) {
@@ -113,6 +132,22 @@ function obtenerObjetosEnMapa() {
 
 io.on('connection', function (socket) {
 	console.log('connection established', socket.id);
+
+	socket.on('hola',(data, respuesta) => {
+		console.log('soy el que recibe el evento');
+		console.log(data);
+		respuesta(data);
+	});
+
+	socket.on('load_map',() => {
+		let mapa = obtenerPosiciones();
+		console.log('load_map id='+socket.id);
+		io.sockets.emit('get_data', mapa);
+	});
+
+	socket.on('init', () => {
+		console.log('alguien pidio el init'+socket.id);
+	});
 
 	socket.on('cargar_mapa', ( {pos_x_ei, pos_y_ei}, respuesta) => {
 		let positions_maximos = obtenerPosiciones();

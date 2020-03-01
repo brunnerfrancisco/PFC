@@ -1,0 +1,21 @@
+.firme{
+    background-color: #5cb85c;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 2px;
+}
+.lava{
+    background-color: #d9534f;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 2px;
+}
+.resbaladizo{
+    background-color: #f0ad4e;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 2px;
+}
+.tabla{
+    margin: auto;
+}

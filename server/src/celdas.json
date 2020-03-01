@@ -1,0 +1,56 @@
+[
+    {
+        "name": "celda(1,1)",
+        "pos_x": 1,
+        "pos_y": 1,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(1,2)",
+        "pos_x": 1,
+        "pos_y": 2,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(1,3)",
+        "pos_x": 1,
+        "pos_y": 3,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(2,1)",
+        "pos_x": 2,
+        "pos_y": 1,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(2,2)",
+        "pos_x": 2,
+        "pos_y": 2,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(2,3)",
+        "pos_x": 2,
+        "pos_y": 3,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(3,1)",
+        "pos_x": 3,
+        "pos_y": 1,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(3,2)",
+        "pos_x": 3,
+        "pos_y": 2,
+        "suelo": "firme"
+    },
+    {
+        "name": "celda(3,3)",
+        "pos_x": 3,
+        "pos_y": 3,
+        "suelo": "firme"
+    }
+]

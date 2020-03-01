@@ -1,7 +1,6 @@
 const socket = io();
 
 var estadoActual = {};
-
 var elementos = {};
 var mapa_cargado = false;
 
@@ -68,9 +67,8 @@ function cargar_mapa() {
 	let tabla = document.getElementById('body_tabla_mapa');
 	var i = 1, j = 1;
 	var row, col;
-
-	/* CALLBACK Servidor */
 	socket.emit('cargar_mapa', {pos_x_ei, pos_y_ei},
+	/* CALLBACK Servidor */
 	({ positions_maximos, valid, objetos }) => {
 		if(valid){
 			positions = positions_maximos['positions'];
@@ -405,7 +403,6 @@ function saltar() {
 	}
 }
 
-
 function levantar_llave() {
 	if (mapa_cargado) {
 		let index_llave_to_remove;
@@ -540,7 +537,7 @@ function actualizarEstadoTablaGirar(value) {
 }
 
 /*  ---------------------- OYENTES ------------------------------- */
-
+/* 
 let btn_cargar_mapa = document.getElementById('btn_cargar_mapa');
 btn_cargar_mapa.addEventListener('click', cargar_mapa);
 
@@ -570,4 +567,4 @@ bnt_girar_E.addEventListener('click', () => actualizarEstadoTablaGirar(bnt_girar
 
 document.addEventListener('keypress', (event) => {
 
-});
+}); */

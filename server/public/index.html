@@ -6,70 +6,14 @@
 	<title>
 		NodeJS - Arduino
 	</title>
-	
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+		integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
 	<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-	<header class="blog-header py-3 flex-nowrap text-center">
-		<h1>La Isla del Tesoro</h1>
-	</header>
+	<div id="root"></div>
 	<div class="container">
-		<div class="row">
-			<div class="col-md-8 justify-content-center align-items-center">
-				<table id="tabla_mapa" style="margin:auto;">
-					<tbody id="body_tabla_mapa"></tbody>
-				</table>
-			</div>
-			<div class="col-md-4">
-				<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
-					style="margin:auto;">
-					<div class="card-header card-block">Estado Inicial</div>
-					<div class="card-body">
-						<h5 class="card-title">Posición</h5>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroup-sizing-sm">X</span>
-							</div>
-							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada X"
-								aria-describedby="inputGroup-sizing-sm" id="pos_x_ei" required>
-							<div class="invalid-feedback">
-								Coordenada Invalida
-							</div>
-						</div>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroup-sizing-sm">Y</span>
-							</div>
-							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada Y"
-								aria-describedby="inputGroup-sizing-sm" id="pos_y_ei" required>
-							<div class="invalid-feedback">
-								Coordenada Invalida
-							</div>
-						</div>
-						<h5 class="card-title">Orientación</h5>
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<label class="input-group-text" for="inputOrientacion">Orientación</label>
-							</div>
-							<select class="custom-select" id="inputOrientacion" required>
-								<option value="N" selected>Norte</option>
-								<option value="O">Oeste</option>
-								<option value="S">Sur</option>
-								<option value="E">Este</option>
-							</select>
-							<div class="invalid-feedback">
-								Orientacion Requerida
-							</div>
-						</div>
-						<button class="btn-primary btn-block rounded" id="btn_cargar_mapa">Cargar
-							Mapa</button>
-					</div>
-				</div>
-			</div>
-		</div>
 		<div class="card-deck">
 			<div class="col-md-6 px-2 mb-4">
 				
@@ -166,6 +110,7 @@
 	</div>
 	<script src="socket.io/socket.io.js" charset="utf-8"></script>
 	<script src="js.js" charset="utf-8"></script>
+	<script src="/bundle.js"></script>
 </body>
 
 </html>
