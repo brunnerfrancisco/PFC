@@ -4,14 +4,20 @@ html{
 
 body {
     background: #E8E8E8;
+    font-size: small;
+}
+
+input[type="text"] {
+    font-size: small;
+}
+button{
+    font-size: small;
+}
+select{
+    font-size: x-small;
 }
 
 .celda {
     border-radius: 10px;
     width: 60px;
-    height: 40px;
-}
-
-.fila {
-    height: 40px;
 }
