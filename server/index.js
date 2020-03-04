@@ -558,7 +558,7 @@ io.on('connection', function (socket) {
 		estadoIA['poseciones']['palas'].forEach((element) => {
 			if(poseciones_s==""){
 				poseciones_s = "[p,"+element.name+"]";
-			} else {
+			} else {// esto no se deberia ejecutar nunca porque no deberia tener poder tener mas de una pala
 				poseciones_s += ",[p,"+element.name+"]";
 			}
 		});
