@@ -23,132 +23,144 @@
 			</table>
 		</div>
 		<div class="card-deck">
-			<div class="col-sm">
-				<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
-					style="margin:auto;">
-					<div class="card-header card-block">Estado Inicial IA</div>
-					<div class="card-body">
-						<h5 class="card-title">Posición</h5>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroup-sizing-sm">X</span>
-							</div>
-							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada X"
-								aria-describedby="inputGroup-sizing-sm" id="pos_x_ei_ia" required>
-							<div class="invalid-feedback">
-								Coordenada Invalida
+			<div class="col">
+				<div class="row">
+					<div class="col-sm">
+						<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
+							style="margin:auto;">
+							<div class="card-header card-block">Estado Inicial IA</div>
+							<div class="card-body">
+								<h5 class="card-title">Posición</h5>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="inputGroup-sizing-sm">X</span>
+									</div>
+									<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada X"
+										aria-describedby="inputGroup-sizing-sm" id="pos_x_ei_ia" required>
+									<div class="invalid-feedback">
+										Coordenada Invalida
+									</div>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="inputGroup-sizing-sm">Y</span>
+									</div>
+									<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada Y"
+										aria-describedby="inputGroup-sizing-sm" id="pos_y_ei_ia" required>
+									<div class="invalid-feedback">
+										Coordenada Invalida
+									</div>
+								</div>
+								<h5 class="card-title">Orientación</h5>
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<label class="input-group-text text-small" for="inputOrientacion_ia">Orientación</label>
+									</div>
+									<select class="custom-select" id="inputOrientacion_ia" required>
+										<option value="N" selected>Norte</option>
+										<option value="O">Oeste</option>
+										<option value="S">Sur</option>
+										<option value="E">Este</option>
+									</select>
+									<div class="invalid-feedback">
+										Orientacion Requerida
+									</div>
+								</div>
+								<button class="btn-primary btn-block rounded" id="btn_cargar_mapa">Cargar Mapa</button>
 							</div>
 						</div>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroup-sizing-sm">Y</span>
-							</div>
-							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada Y"
-								aria-describedby="inputGroup-sizing-sm" id="pos_y_ei_ia" required>
-							<div class="invalid-feedback">
-								Coordenada Invalida
+					</div>
+					<div class="col-sm">
+						<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
+							style="margin:auto;">
+							<div class="card-header card-block">Estado Inicial Jugador</div>
+							<div class="card-body">
+								<h5 class="card-title">Posición</h5>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="inputGroup-sizing-sm">X</span>
+									</div>
+									<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada X"
+										aria-describedby="inputGroup-sizing-sm" id="pos_x_ei_j" required>
+									<div class="invalid-feedback">
+										Coordenada Invalida
+									</div>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="inputGroup-sizing-sm">Y</span>
+									</div>
+									<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada Y"
+										aria-describedby="inputGroup-sizing-sm" id="pos_y_ei_j" required>
+									<div class="invalid-feedback">
+										Coordenada Invalida
+									</div>
+								</div>
+								<h5 class="card-title">Orientación</h5>
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<label class="input-group-text text-small" for="inputOrientacion_j">Orientación</label>
+									</div>
+									<select class="custom-select" id="inputOrientacion_j" required>
+										<option value="N" selected>Norte</option>
+										<option value="O">Oeste</option>
+										<option value="S">Sur</option>
+										<option value="E">Este</option>
+									</select>
+									<div class="invalid-feedback">
+										Orientacion Requerida
+									</div>
+								</div>
+								<button class="btn-primary btn-block rounded" id="btn_cargar_mapa">Cargar Mapa</button>
 							</div>
 						</div>
-						<h5 class="card-title">Orientación</h5>
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<label class="input-group-text text-small" for="inputOrientacion_ia">Orientación</label>
-							</div>
-							<select class="custom-select" id="inputOrientacion_ia" required>
-								<option value="N" selected>Norte</option>
-								<option value="O">Oeste</option>
-								<option value="S">Sur</option>
-								<option value="E">Este</option>
-							</select>
-							<div class="invalid-feedback">
-								Orientacion Requerida
-							</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
+							style="margin:auto;">
+						<div class="card-body">
+							Metas y Cargar Mapa
 						</div>
-						<button class="btn-primary btn-block rounded" id="btn_cargar_mapa">Cargar Mapa</button>
 					</div>
 				</div>
 			</div>
-			<div class="col-sm">
-				<div class="card bg-dark text-white my-3 justify-content-center align-items-center card-block"
-					style="margin:auto;">
-					<div class="card-header card-block">Estado Inicial Jugador</div>
-					<div class="card-body">
-						<h5 class="card-title">Posición</h5>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroup-sizing-sm">X</span>
+				<div class="col-sm my-3">
+					<div class="card px-3 text-white rounded bg-dark align-items-center card-block">
+						<div class="card-header text-center" style="width: 100%;">Jugador</div>
+						<div class="card-body" style="width: 100%;">
+							<div class="row">
+								<div class="col">
+									<h5 class="card-title">Acciones</h5>
+									<button class="btn-primary btn-block rounded text-center mb-3" id="btn_avanzar">Avanzar</button>
+									<button class="btn-primary btn-block rounded text-center mb-3" id="btn_saltar">Saltar</button>
+									
+								</div>
+								<div class="col">
+									<h5 class="card-title">Levantar</h5>
+									<button class="btn-primary btn-block rounded text-center mb-3" id="btn_levantar_llave">LLave</button>
+									<button class="btn-primary btn-block rounded text-center mb-3" id="btn_levantar_pala">Pala</button>
+								</div>
 							</div>
-							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada X"
-								aria-describedby="inputGroup-sizing-sm" id="pos_x_ei_j" required>
-							<div class="invalid-feedback">
-								Coordenada Invalida
-							</div>
-						</div>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroup-sizing-sm">Y</span>
-							</div>
-							<input type="text" class="form-control" aria-label="Small" placeholder="Coordenada Y"
-								aria-describedby="inputGroup-sizing-sm" id="pos_y_ei_j" required>
-							<div class="invalid-feedback">
-								Coordenada Invalida
-							</div>
-						</div>
-						<h5 class="card-title">Orientación</h5>
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<label class="input-group-text text-small" for="inputOrientacion_j">Orientación</label>
-							</div>
-							<select class="custom-select" id="inputOrientacion_j" required>
-								<option value="N" selected>Norte</option>
-								<option value="O">Oeste</option>
-								<option value="S">Sur</option>
-								<option value="E">Este</option>
-							</select>
-							<div class="invalid-feedback">
-								Orientacion Requerida
-							</div>
-						</div>
-						<button class="btn-primary btn-block rounded" id="btn_cargar_mapa">Cargar Mapa</button>
-					</div>
-				</div>
-			</div>
-			<div class="col-sm my-3">
-				<div class="card px-3 text-white rounded bg-dark align-items-center card-block">
-					<div class="card-header text-center" style="width: 100%;">Jugador</div>
-					<div class="card-body" style="width: 100%;">
-						<div class="row">
-							<div class="col">
-								<h5 class="card-title">Acciones</h5>
-								<button class="btn-primary btn-block rounded text-center mb-3" id="btn_avanzar">Avanzar</button>
-								<button class="btn-primary btn-block rounded text-center mb-3" id="btn_saltar">Saltar</button>
+							<div class="row">
 								
-							</div>
-							<div class="col">
-								<h5 class="card-title">Levantar</h5>
-								<button class="btn-primary btn-block rounded text-center mb-3" id="btn_levantar_llave">LLave</button>
-								<button class="btn-primary btn-block rounded text-center mb-3" id="btn_levantar_pala">Pala</button>
-							</div>
-						</div>
-						<div class="row">
-							
-							<div class="col justify-content-center">
-								<h5 class="card-title text-center">Girar</h5>
-								<div class="input-group mb-3 justify-content-center">
-									<button class="btn-primary rounded text-center" value="N" id="btn_girar_n">Girar N</button>
-								</div>
-								<div class="input-group mb-3 justify-content-center">
-									<button class="btn-primary rounded mx-2" value="O" id="btn_girar_o">Girar O</button>
-									<button class="btn-primary rounded mx-2" value="E" id="btn_girar_e">Girar E</button>
-								</div>
-								<div class="input-group mb-3 justify-content-center">
-									<button class="btn-primary rounded text-center" value="S" id="btn_girar_s">Girar S</button>
+								<div class="col justify-content-center">
+									<h5 class="card-title text-center">Girar</h5>
+									<div class="input-group mb-3 justify-content-center">
+										<button class="btn-primary rounded text-center" value="N" id="btn_girar_n">Girar N</button>
+									</div>
+									<div class="input-group mb-3 justify-content-center">
+										<button class="btn-primary rounded mx-2" value="O" id="btn_girar_o">Girar O</button>
+										<button class="btn-primary rounded mx-2" value="E" id="btn_girar_e">Girar E</button>
+									</div>
+									<div class="input-group mb-3 justify-content-center">
+										<button class="btn-primary rounded text-center" value="S" id="btn_girar_s">Girar S</button>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 		</div>
 		<div class="card-deck">
 			<div class="col-md-6 px-2">
@@ -184,24 +196,39 @@
 				</div>
 			</div>
 			<div class="col-md-6 px-2">
-				Aca van el estado de la IA
+				<div class="card px-3 text-white rounded bg-dark align-items-center card-block">
+					<div class="card-header text-center" style="width: 100%;">Estado - IA</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Posición</div>
+						<ul>
+							<li>X = <span id="estado_pos_x_ia"></span></li>
+							<li>Y = <span id="estado_pos_y_ia"></span></li>
+						</ul>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Orientación</div>
+						<span id="estado_orientacion_ia"></span>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Camino</div>
+						<ul id="estado_camino_ia"></ul>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Costo</div>
+						<span id="estado_costo_ia"></span>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Llaves</div>
+						<ul id="estado_llaves_ia"></ul>
+					</div>
+					<div class="card-body" style="width: 100%;">
+						<div class="card-title">Palas</div>
+						<ul id="estado_palas_ia"></ul>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
-	<!-- <div id="imagenes" hidden>
-		<img id="arrow_north_j" src="images/arrow_north.png" style="width:15px; height:15px;">
-		<img id="arrow_south_j" src="images/arrow_south.png" style="width:15px; height:15px;">
-		<img id="arrow_east_j"  src="images/arrow_east.png"  style="width:15px; height:15px;">
-		<img id="arrow_west_j"  src="images/arrow_west.png"  style="width:15px; height:15px;">
-		<img id="arrow_north_ia" src="images/arrow_north.png" style="width:15px; height:15px;">
-		<img id="arrow_south_ia" src="images/arrow_south.png" style="width:15px; height:15px;">
-		<img id="arrow_east_ia"  src="images/arrow_east.png"  style="width:15px; height:15px;">
-		<img id="arrow_west_ia"  src="images/arrow_west.png"  style="width:15px; height:15px;">
-		<img id="pala_image" src="images/pala.svg" style="width:15px; height:15px;">
-		<img id="llave_image" src="images/key.svg" style="width:15px; height:15px;">
-		<img id="refugio_image" src="images/tent.svg" style="width:15px; height:15px;">
-		<img id="obstaculo_image" src="images/box.svg" style="width:15px; height:15px;">
-	</div> -->
 	<script src="socket.io/socket.io.js" charset="utf-8"></script>
 	<script src="js.js" charset="utf-8"></script>
 </body>

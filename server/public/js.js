@@ -1,7 +1,5 @@
 const socket = io();
 
-var estadoActualJugador = {};
-
 var elementos = {};
 var mapa_cargado = false;
 
@@ -196,7 +194,6 @@ function cargar_mapa() {
 						});
 						tabla.appendChild(rowElement);
 					});
-					estadoActualJugador = estadoInicialJugador;
 					document.getElementById('btn_cargar_mapa').setAttribute('disabled', 'true');
 					document.getElementById('btn_cargar_mapa').setAttribute('class', 'btn-disabled btn-block rounded ');
 					mapa_cargado = true;
@@ -301,6 +298,7 @@ function avanzar() {
 					}
 				}
 			});
+		jugarIA();
 	} else {
 		console.log("ERROR: El mapa no esta cargado");
 	}
@@ -345,7 +343,9 @@ function saltar() {
 					}
 				}
 			});
-	}
+		} else {
+			console.log("ERROR: El mapa no esta cargado");
+		}
 }
 
 function levantar_llave() {
@@ -359,6 +359,8 @@ function levantar_llave() {
 					console.log(msg);
 				}
 			});
+	} else {
+		console.log("ERROR: El mapa no esta cargado");
 	}
 }
 
@@ -373,6 +375,8 @@ function levantar_pala() {
 					console.log(msg);
 				}
 			});
+	} else {
+		console.log("ERROR: El mapa no esta cargado");
 	}
 }
 
@@ -383,6 +387,9 @@ function girar(value) {
 				actualizarMapa(value, elementsId);
 				actualizarEstado(estado, 'j');
 			});
+		jugarIA();
+	} else {
+		console.log("ERROR: El mapa no esta cargado");
 	}
 }
 
@@ -423,4 +430,42 @@ document.addEventListener('keypress', (event) => {
  * ******************************   IA   *****************************
  */
 
-socket.on('avanzar_IA');
+function jugarIA() {
+	socket.emit('jugar_IA', 
+		({ accion, elementsId, estado }) => {
+			switch(accion) {
+				case 'avanzar': {
+					actualizarMapa(estado['orientacion'], elementsId);
+					actualizarEstado(estado, 'ia');
+					break;
+				}
+				case 'saltar_lava': {
+					actualizarMapa(estado['orientacion'], elementsId);
+					actualizarEstado(estado, 'ia');
+					break;
+				}
+				case 'saltar_obstaculo': {
+					actualizarMapa(estado['orientacion'], elementsId);
+					actualizarEstado(estado, 'ia');
+					break;
+				}
+				case 'girar': {
+					actualizarMapa(estado['orientacion'], elementsId);
+					actualizarEstado(estado, 'ia');
+					break;
+				}
+				case 'levantar_llave': {
+					console.log(estado);
+					console.log(elementsId);
+					actualizarMapa(estado['orientacion'], elementsId);
+					actualizarEstado(estado, 'ia');
+					break;
+				}
+				case 'levantar_pala': {
+					actualizarMapa(estado['orientacion'], elementsId);
+					actualizarEstado(estado, 'ia');
+					break;
+				}
+			}
+		});
+}

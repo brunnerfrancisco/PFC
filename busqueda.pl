@@ -1,11 +1,11 @@
 :-consult('sucesores.pl').
 %:-consult('islaExample.pl').
-:-consult('mapa.pl').
+%:-consult('mapa.pl').
 /*
     Se definen los predicados dinamicos a ser utilizados
 */
-:-dynamic frontera/1, visitado/1, tupla/3, meta/1.
-
+:-dynamic frontera/1, visitado/1, tupla/3, meta/1, estaEn/2.
+:-consult('mapa.pl').
 /*
     flag para que a la hora de hacer las consultas por la consola
         muestre TODOS los elementos de las listas
@@ -26,14 +26,14 @@ buscar_plan(EstadoInicial,Metas,Destino,Plan,Costo):-
     retractall(visitado(_)),
     retractall(tupla(_,_,_)),
     retractall(meta(_)),
-    EstadoInicial = [_,_,[]],
+    /* EstadoInicial = [_,_,[]], */
     agregarTuplasPalaMeta(Metas),
     buscarHeuristica(EstadoInicial,Heuristica),
     assert(frontera(nodo(EstadoInicial,[],0,Heuristica))),
     buscarAE(Destino,Plan,Costo),!.
-buscar_plan([_,_,[_]],_,_,_,_):-!,
+/* buscar_plan([_,_,[_]],_,_,_,_):-!,
     nl,write('La Lista de Posesiones del Estado Inicial debe estar vacia'),nl,
-    fail.
+    fail. */
 buscar_plan(_,_,_,_,_):-
     nl,write('No es posible hallar un plan'),nl,
     fail.

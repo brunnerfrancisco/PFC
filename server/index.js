@@ -23,7 +23,6 @@ server.listen(app.get('port'), () => {
 let query = null;
 let ret = null;
 
-let mapaCargado = false;
 let estadoJugador = {};
 let estadoIA = {};
 let elementos = {};
@@ -136,15 +135,23 @@ function tengoLlaveConAccesos() {
 	return tengo;
 }
 
-function getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion_old, orientacion_new) {
+/**
+ * Obtiene los ID de los elementos HMTL de la grafica a ser actualizados 
+ * para los objetos que cambian de posicion (jugador, IA)
+ */
+function getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion_old, orientacion_new, entidad) {
 	let elementsId = { celda: {}, image: {} };
 	elementsId['celda']['old'] = 'celda(' + pos_x_i + ',' + pos_y_i + ')';
 	elementsId['celda']['new'] = 'celda(' + pos_x_f + ',' + pos_y_f + ')';
-	elementsId['image']['old'] = 'celda(' + pos_x_i + ',' + pos_y_i + ')_j_' + orientacion_old;
-	elementsId['image']['new'] = 'celda(' + pos_x_f + ',' + pos_y_f + ')_j_' + orientacion_new;
+	elementsId['image']['old'] = 'celda(' + pos_x_i + ',' + pos_y_i + ')_'+entidad+'_' + orientacion_old;
+	elementsId['image']['new'] = 'celda(' + pos_x_f + ',' + pos_y_f + ')_'+entidad+'_' + orientacion_new;
 	return elementsId;
 }
 
+/**
+ * Obtiene los ID de los elementos HMTL de la grafica a ser actualizados 
+ * para los objetos que NO cambian de posicion (llaves, palas) -> solo se quitan de la grafica
+ */
 function getElementsIdObjetos(pos_x, pos_y, objeto) {
 	let elementsId = { celda: {}, image: {} };
 	elementsId['celda']['old'] = 'celda(' + pos_x + ',' + pos_y + ')';
@@ -167,8 +174,10 @@ io.on('connection', function (socket) {
 		if (valid_ia) {
 			estadoIA = estadoInicialIA;
 		}
-		elementos = { refugios: objetos.refugios, obstaculos: objetos.obstaculos, 
-			llaves: objetos.llaves, palas:objetos.palas };
+		elementos = {
+			refugios: objetos.refugios, obstaculos: objetos.obstaculos,
+			llaves: objetos.llaves, palas: objetos.palas
+		};
 		respuesta({ mapa, valid: { valid_j: valid_j, valid_ia: valid_ia }, objetos });
 	});
 
@@ -231,8 +240,8 @@ io.on('connection', function (socket) {
 							if (tengoLlave()) {
 								if (tengoLlaveConAccesos()) {
 									elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
-										estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, estadoJugador['orientacion'], 
-										estadoJugador['orientacion']);
+										estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, estadoJugador['orientacion'],
+										estadoJugador['orientacion'],'j');
 									estadoJugador['posicion']['pos_x'] = pos_x_f;
 									estadoJugador['posicion']['pos_y'] = pos_y_f;
 									estadoJugador['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
@@ -263,8 +272,8 @@ io.on('connection', function (socket) {
 							}
 						} else { // si el refugio no requiere llave
 							elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
-								estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, 
-								estadoJugador['orientacion'], estadoJugador['orientacion']);
+								estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f,
+								estadoJugador['orientacion'], estadoJugador['orientacion'], 'j');
 							estadoJugador['posicion']['pos_x'] = pos_x_f;
 							estadoJugador['posicion']['pos_y'] = pos_y_f;
 							estadoJugador['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
@@ -277,8 +286,8 @@ io.on('connection', function (socket) {
 						}
 					} else { // si no hay refugio ni obstaculo actualizo el estado
 						elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
-							estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, 
-							estadoJugador['orientacion'], estadoJugador['orientacion']);
+							estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f,
+							estadoJugador['orientacion'], estadoJugador['orientacion'],'j');
 						estadoJugador['posicion']['pos_x'] = pos_x_f;
 						estadoJugador['posicion']['pos_y'] = pos_y_f;
 						estadoJugador['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
@@ -305,7 +314,7 @@ io.on('connection', function (socket) {
 		respuesta({ error: error, msg: msg, elementsId: elementsId, estado: estadoJugador });
 	});
 
-	socket.on('saltar_jugador', ( respuesta ) => {
+	socket.on('saltar_jugador', (respuesta) => {
 		let pos_x_f, pos_y_f, pos_x_i, pos_y_i;
 		let actual_x = estadoJugador['posicion']['pos_x'];
 		let actual_y = estadoJugador['posicion']['pos_y'];
@@ -345,7 +354,7 @@ io.on('connection', function (socket) {
 		let refugio_fin = false;
 		let elementsId;
 		let error = 0, msg = "";
-		let suelo_fin = null, suelo_int = null;
+		let suelo_fin = null, suelo_int = null, suelo_ini;
 
 		query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo).');
 		ret = null;
@@ -356,20 +365,20 @@ io.on('connection', function (socket) {
 		query.close();
 		//me fijo si hay un obstaculo en la posicion intermedia
 		elementos.obstaculos.some((obs) => {
-			if(obs.pos_x == pos_x_i && obs.pos_y == pos_y_i){
+			if (obs.pos_x == pos_x_i && obs.pos_y == pos_y_i) {
 				obstaculo_int = { hayObstaculo: true, name: obs.name, altura: obs.altura };
 				return true;
 			}
 		});
 		//me fijo si hay un obstaculo en la posicion final
 		obstaculo_fin = elementos.obstaculos.some((obs) => {
-			if(obs.pos_x == pos_x_f && obs.pos_y == pos_y_f) {
+			if (obs.pos_x == pos_x_f && obs.pos_y == pos_y_f) {
 				return true;
 			}
 		});
 		//me fijo si hay un refugio en la posicion final
 		refugio_fin = elementos.refugios.some((refu) => {
-			if(refu.pos_x == pos_x_f && refu.pos_y == pos_y_f) {
+			if (refu.pos_x == pos_x_f && refu.pos_y == pos_y_f) {
 				return true;
 			}
 		});
@@ -379,21 +388,27 @@ io.on('connection', function (socket) {
 			suelo_int = ret.Suelo;
 		}
 		query.close();
+		//me fijo el tipo de suelo en la posicion de donde sale
+		query = new swipl.Query('celda([' + actual_x + ',' + actual_x + '],Suelo).');
+		if (ret = query.next()) {
+			suelo_ini = ret.Suelo;
+		}
+		query.close();
 
-		if(suelo_fin != 'lava') {
-			if(!refugio_fin) {
-				if(!obstaculo_fin) {
-					if(obstaculo_int.hayObstaculo) {
-						if(obstaculo_int.altura < 5) { // aca puedo realizar el salto
+		if (suelo_fin != 'lava') {
+			if (!refugio_fin) {
+				if (!obstaculo_fin) {
+					if (obstaculo_int.hayObstaculo) {
+						if (obstaculo_int.altura < 5) { // aca puedo realizar el salto
 							elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
-								estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, 
-								estadoJugador['orientacion'], estadoJugador['orientacion']);
+								estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f,
+								estadoJugador['orientacion'], estadoJugador['orientacion'], 'j');
 							estadoJugador['posicion']['pos_x'] = pos_x_f;
 							estadoJugador['posicion']['pos_y'] = pos_y_f;
-							estadoJugador['camino'].push('saltar_obstaculo('+pos_x_f+','+pos_y_f+')');
-							if(suelo_fin == 'firme') {
+							estadoJugador['camino'].push('saltar_obstaculo(' + pos_x_f + ',' + pos_y_f + ')');
+							if (suelo_fin == 'firme') {
 								estadoJugador['costo'] = estadoJugador['costo'] + 4;
-							} else if(suelo_fin == 'resbaladizo') {
+							} else if (suelo_fin == 'resbaladizo') {
 								estadoJugador['costo'] = estadoJugador['costo'] + 5;
 							}
 						} else {
@@ -401,15 +416,20 @@ io.on('connection', function (socket) {
 							error = 6;
 						}
 					} else {
-						if(suelo_int == 'lava') {
-							if(suelo_fin != 'resbaladizo') { // aca puedo realizar el salto
-								elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
-									estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, 
-									estadoJugador['orientacion'], estadoJugador['orientacion']);
-								estadoJugador['posicion']['pos_x'] = pos_x_f;
-								estadoJugador['posicion']['pos_y'] = pos_y_f;
-								estadoJugador['camino'].push('saltar_lava('+pos_x_f+','+pos_y_f+')');
-								estadoJugador['costo'] = estadoJugador['costo'] + 3;
+						if (suelo_int == 'lava') {
+							if (suelo_fin != 'resbaladizo') { 
+								if(suelo_ini!='resbaladizo') { // aca puedo realizar el salto
+									elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
+										estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f,
+										estadoJugador['orientacion'], estadoJugador['orientacion'], 'j');
+									estadoJugador['posicion']['pos_x'] = pos_x_f;
+									estadoJugador['posicion']['pos_y'] = pos_y_f;
+									estadoJugador['camino'].push('saltar_lava(' + pos_x_f + ',' + pos_y_f + ')');
+									estadoJugador['costo'] = estadoJugador['costo'] + 3;
+								} else {
+									msg = "ERROR saltar: celda(" + actual_x + "," + actual_x + ") suelo Resbaladizo";
+									error = 6;
+								}
 							} else {
 								msg = "ERROR saltar: celda(" + pos_x_f + "," + pos_y_f + ") suelo Resbaladizo";
 								error = 5;
@@ -433,11 +453,11 @@ io.on('connection', function (socket) {
 		}
 		respuesta({ error: error, msg: msg, elementsId: elementsId, estado: estadoJugador });
 	});
-	
-	socket.on('girar',( {orientacion} , respuesta ) => {
-		let elementsId = getElementsId(estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'], 
-			estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'], 
-			estadoJugador['orientacion'], orientacion);
+
+	socket.on('girar', ({ orientacion }, respuesta) => {
+		let elementsId = getElementsId(estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'],
+			estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'],
+			estadoJugador['orientacion'], orientacion, 'j');
 		switch (orientacion) {
 			case 'N': {
 				estadoJugador['camino'].push('girar(N)');
@@ -486,23 +506,23 @@ io.on('connection', function (socket) {
 		let elementsId = getElementsIdObjetos(estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'], 'llave');
 		let index_llave = -1;
 		elementos.llaves.some((llave, index) => {
-			if(llave.pos_x == estadoJugador['posicion']['pos_x'] && llave.pos_y == estadoJugador['posicion']['pos_y']) {
+			if (llave.pos_x == estadoJugador['posicion']['pos_x'] && llave.pos_y == estadoJugador['posicion']['pos_y']) {
 				index_llave = index;
 				return true;
 			}
 		});
-		if(index_llave >= 0) {
-			estadoJugador['camino'].push('levantar_llave(' + estadoJugador['posicion']['pos_x'] + ',' + 
+		if (index_llave >= 0) {
+			estadoJugador['camino'].push('levantar_llave(' + estadoJugador['posicion']['pos_x'] + ',' +
 				estadoJugador['posicion']['pos_y'] + ')');
 			estadoJugador['poseciones']['llaves'].push(elementos.llaves[index_llave]);
 			elementos['llaves'].splice(index_llave, 1);
 		} else {
-			msg = "ERROR levantar_llave: No existe llave en celda(" + estadoJugador['posicion']['pos_x'] + "," + 
+			msg = "ERROR levantar_llave: No existe llave en celda(" + estadoJugador['posicion']['pos_x'] + "," +
 				estadoJugador['posicion']['pos_y'] + ")";
 			error = 1;
 		}
-		
-		respuesta({error:error, msg:msg, elementsId:elementsId, estado:estadoJugador});
+
+		respuesta({ error: error, msg: msg, elementsId: elementsId, estado: estadoJugador });
 	});
 
 	socket.on('levantar_pala', (respuesta) => {
@@ -511,24 +531,294 @@ io.on('connection', function (socket) {
 		let elementsId = getElementsIdObjetos(estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'], 'pala');
 		let index_pala = -1;
 		elementos.palas.some((pala, index) => {
-			if(pala.pos_x == estadoJugador['posicion']['pos_x'] && pala.pos_y == estadoJugador['posicion']['pos_y']) {
+			if (pala.pos_x == estadoJugador['posicion']['pos_x'] && pala.pos_y == estadoJugador['posicion']['pos_y']) {
 				index_pala = index;
 				return true;
 			}
 		});
-		if(index_pala >= 0) {
-			estadoJugador['camino'].push('levantar_pala(' + estadoJugador['posicion']['pos_x'] + ',' + 
+		if (index_pala >= 0) {
+			estadoJugador['camino'].push('levantar_pala(' + estadoJugador['posicion']['pos_x'] + ',' +
 				estadoJugador['posicion']['pos_y'] + ')');
 			estadoJugador['poseciones']['palas'].push(elementos.palas[index_pala]);
 			estadoJugador['costo'] = estadoJugador['costo'] + 1;
 			elementos['palas'].splice(index_pala, 1);
 		} else {
-			msg = "ERROR levantar_pala: No existe pala en celda(" + estadoJugador['posicion']['pos_x'] + "," + 
+			msg = "ERROR levantar_pala: No existe pala en celda(" + estadoJugador['posicion']['pos_x'] + "," +
 				estadoJugador['posicion']['pos_y'] + ")";
 			error = 1;
 		}
-		
-		respuesta({error:error, msg:msg, elementsId:elementsId, estado:estadoJugador});
+
+		respuesta({ error: error, msg: msg, elementsId: elementsId, estado: estadoJugador });
+	});
+
+	socket.on('jugar_IA', (respuesta) => {
+		//aca va a ir toda la jugada de la IA
+		// armar estado incial a partir del estado de la IA
+		let poseciones_s="";
+		estadoIA['poseciones']['palas'].forEach((element) => {
+			if(poseciones_s==""){
+				poseciones_s = "[p,"+element.name+"]";
+			} else {
+				poseciones_s += ",[p,"+element.name+"]";
+			}
+		});
+		estadoIA['poseciones']['llaves'].forEach((element) => {
+			if(poseciones_s==""){
+				poseciones_s = "[l,"+element.name+","+element.accesos+"]";
+			} else {
+				poseciones_s += ",[l,"+element.name+","+element.accesos+"]";
+			}
+		});
+		poseciones_s = "["+poseciones_s+"]";
+
+		let estadoInicial = "[[" + estadoIA['posicion']['pos_x'] + "," + estadoIA['posicion']['pos_y'] +
+			"]," + estadoIA['orientacion'].toLowerCase() + "," + poseciones_s + "]";
+		let metas = "[[4,10]]";
+		let elementsId = {};
+		let plan = {};
+		let accion;
+		let qry = "buscar_plan(" + estadoInicial + ", " + metas + ", Destino, Plan, Costo).";
+		console.log(qry);
+		query = new swipl.Query(qry);
+		ret = null;
+		if (ret = query.next()) {
+			plan = ret.Plan;
+		}
+		query.close();
+		console.log(plan);
+
+		let proxima_accion = plan.head;
+		//console.log(proxima_accion);
+		//console.log(proxima_accion.args);
+		//console.log(proxima_accion.args[0].tail);
+		if (proxima_accion.name) { // girar, levantar_pala, levantar_llave
+			switch (proxima_accion.name) {
+				case 'girar': { // en args esta la orientacion a la que quiere girar
+					accion = 'girar';
+					let orientacion_f = proxima_accion.args[0].toUpperCase();
+					let orientacion = estadoIA['orientacion'];
+					let pos_x,pos_y;
+					pos_x = estadoIA['posicion']['pos_x'];
+					pos_y = estadoIA['posicion']['pos_y'];
+					elementsId = getElementsId(pos_x, pos_y, pos_x, pos_y, orientacion, orientacion_f, 'ia');
+					estadoIA['orientacion'] = orientacion_f;
+					estadoIA['camino'].push('girar('+orientacion_f+')');
+					switch (orientacion) {
+						case 'N': {
+							if (estadoIA['orientacion'] == 'S') {
+								estadoIA['costo'] = estadoIA['costo'] + 2;
+							} else {
+								estadoIA['costo'] = estadoIA['costo'] + 1;
+							}
+							break;
+						}
+						case 'O': {
+							if (estadoIA['orientacion'] == 'E') {
+								estadoIA['costo'] = estadoIA['costo'] + 2;
+							} else {
+								estadoIA['costo'] = estadoIA['costo'] + 1;
+							}
+							break;
+						}
+						case 'S': {
+							if (estadoIA['orientacion'] == 'N') {
+								estadoIA['costo'] = estadoIA['costo'] + 2;
+							} else {
+								estadoIA['costo'] = estadoIA['costo'] + 1;
+							}
+							break;
+						}
+						case 'E': {
+							if (estadoIA['orientacion'] == 'O') {
+								estadoIA['costo'] = estadoIA['costo'] + 2;
+							} else {
+								estadoIA['costo'] = estadoIA['costo'] + 1;
+							}
+							break;
+						}
+					}
+					break;
+				}
+				case 'levantar_pala': { // en args hay un arreglo que tiene la info de la pala
+					accion = 'levantar_pala';
+					//nombre_pala = proxima_accion.args[0].tail.head;
+					let pos_pala = {pos_x:estadoIA['posicion']['pos_x'], pos_y:estadoIA['posicion']['pos_y']};
+					elementsId = getElementsIdObjetos(pos_pala.pos_x, pos_pala.pos_y, 'pala');
+					let index_pala = -1;
+					elementos.palas.some((pala, index) => {
+						if (pala.pos_x == pos_pala.pos_x && pala.pos_y == pos_pala.pos_y) {
+							index_pala = index;
+							return true;
+						}
+					});
+					estadoIA['poseciones']['palas'].push(elementos.palas[index_pala]);
+					elementos['palas'].splice(index_pala, 1);
+					estadoIA['camino'].push('levantar_pala(' + pos_pala.pos_x + ',' + pos_pala.pos_y + ')');
+					estadoIA['costo'] = estadoIA['costo'] + 1;
+					break;
+				}
+				case 'levantar_llave': { // en agrs hay un arreglo que tiene la info de la llave
+					accion = 'levantar_llave';
+					let pos_llave = {pos_x:estadoIA['posicion']['pos_x'], pos_y:estadoIA['posicion']['pos_y']};
+					elementsId = getElementsIdObjetos(pos_llave.pos_x, pos_llave.pos_y, 'llave');
+					let index_llave = -1;
+					elementos.llaves.some((llave, index) => {
+						if (llave.pos_x == pos_llave.pos_x && llave.pos_y == pos_llave.pos_y) {
+							index_llave = index;
+							return true;
+						}
+					});
+					estadoIA['poseciones']['llaves'].push(elementos.llaves[index_llave]);
+					elementos['llaves'].splice(index_llave, 1);
+					estadoIA['camino'].push('levantar_llave(' + pos_llave.pos_x + ',' + pos_llave.pos_y + ')');
+					break;
+				}
+			}
+		} else { // avanzar, saltar_lava, saltar_obstaculo
+			switch (proxima_accion) {
+				case 'avanzar': {
+					accion = 'avanzar';
+					// obtener los ids y actualizar estado
+					let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
+					pos_x_i = estadoIA['posicion']['pos_x'];
+					pos_y_i = estadoIA['posicion']['pos_y'];
+					orientacion = estadoIA['orientacion']
+					switch (orientacion) {
+						case 'N': {
+							pos_x_f = estadoIA['posicion']['pos_x'] - 1;
+							pos_y_f = estadoIA['posicion']['pos_y'];
+							break;
+						}
+						case 'O': {
+							pos_x_f = estadoIA['posicion']['pos_x'];
+							pos_y_f = estadoIA['posicion']['pos_y'] - 1;
+							break;
+						}
+						case 'S': {
+							pos_x_f = estadoIA['posicion']['pos_x'] + 1;
+							pos_y_f = estadoIA['posicion']['pos_y'];
+							break;
+						}
+						case 'E': {
+							pos_x_f = estadoIA['posicion']['pos_x'];
+							pos_y_f = estadoIA['posicion']['pos_y'] + 1;
+							break;
+						}
+					}
+					elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
+					estadoIA['posicion']['pos_x'] = pos_x_f;
+					estadoIA['posicion']['pos_y'] = pos_y_f;
+					estadoIA['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
+					query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo)');
+					ret = null;
+					if (ret = query.next()) {
+						suelo = ret.Suelo;
+					}
+					query.close();
+					if (suelo == 'firme') {
+						estadoIA['costo'] = estadoIA['costo'] + 1;
+					} else if (suelo == 'resbaladizo') {
+						estadoIA['costo'] = estadoIA['costo'] + 2;
+					}
+					if (elementos['refugios']['pos_x'] == pos_x_f && elementos['refugios']['pos_y'] == pos_y_f
+						&& elementos['refugios']['req_key'] == 'si') {
+						// si la posicion a la que avanzo poseia un refugio que requiere llave
+						// agarro una llave de las poseciones y le decremento la cantidad de accesos
+						let index_llave = -1;
+						estadoIA['poseciones']['llaves'].some((llave, index) => {
+							if (llave['accesos'] > 0) {
+								index_llave = index;
+								return true;
+							}
+						});
+						estadoIA['poseciones']['llaves'][index_llave]['accesos'] = estadoIA['poseciones']['llaves'][index_llave]['accesos'] - 1;
+					}
+					break;
+				}
+				case 'saltar_lava': {
+					accion = 'saltar_lava';
+					let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
+					pos_x_i = estadoIA['posicion']['pos_x'];
+					pos_y_i = estadoIA['posicion']['pos_y'];
+					orientacion = estadoIA['orientacion']
+					switch (orientacion) {
+						case 'N': {
+							pos_x_f = estadoIA['posicion']['pos_x'] - 2;
+							pos_y_f = estadoIA['posicion']['pos_y'];
+							break;
+						}
+						case 'O': {
+							pos_x_f = estadoIA['posicion']['pos_x'];
+							pos_y_f = estadoIA['posicion']['pos_y'] - 2;
+							break;
+						}
+						case 'S': {
+							pos_x_f = estadoIA['posicion']['pos_x'] + 2;
+							pos_y_f = estadoIA['posicion']['pos_y'];
+							break;
+						}
+						case 'E': {
+							pos_x_f = estadoIA['posicion']['pos_x'];
+							pos_y_f = estadoIA['posicion']['pos_y'] + 2;
+							break;
+						}
+					}
+					elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
+					estadoIA['posicion']['pos_x'] = pos_x_f;
+					estadoIA['posicion']['pos_y'] = pos_y_f;
+					estadoIA['camino'].push('saltar_lava(' + pos_x_f + ',' + pos_y_f + ')');
+					estadoIA['costo'] = estadoIA['costo'] + 3;
+					break;
+				}
+				case 'saltar_obstaculo': {
+					accion = 'saltar_obstaculo';
+					let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
+					pos_x_i = estadoIA['posicion']['pos_x'];
+					pos_y_i = estadoIA['posicion']['pos_y'];
+					orientacion = estadoIA['orientacion']
+					switch (orientacion) {
+						case 'N': {
+							pos_x_f = estadoIA['posicion']['pos_x'] - 2;
+							pos_y_f = estadoIA['posicion']['pos_y'];
+							break;
+						}
+						case 'O': {
+							pos_x_f = estadoIA['posicion']['pos_x'];
+							pos_y_f = estadoIA['posicion']['pos_y'] - 2;
+							break;
+						}
+						case 'S': {
+							pos_x_f = estadoIA['posicion']['pos_x'] + 2;
+							pos_y_f = estadoIA['posicion']['pos_y'];
+							break;
+						}
+						case 'E': {
+							pos_x_f = estadoIA['posicion']['pos_x'];
+							pos_y_f = estadoIA['posicion']['pos_y'] + 2;
+							break;
+						}
+					}
+					elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
+					estadoIA['posicion']['pos_x'] = pos_x_f;
+					estadoIA['posicion']['pos_y'] = pos_y_f;
+					estadoIA['camino'].push('saltar_obstaculo(' + pos_x_f + ',' + pos_y_f + ')');
+					query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo)');
+					ret = null;
+					if (ret = query.next()) {
+						suelo = ret.Suelo;
+					}
+					query.close();
+					if(suelo=='firme'){
+						estadoIA['costo'] = estadoIA['costo'] + 4;
+					} else if(suelo == 'resbaladizo') {
+						estadoIA['costo'] = estadoIA['costo'] + 5;
+					}
+					break;
+				}
+			}
+		}
+
+		respuesta({ accion:accion, elementsId: elementsId, estado: estadoIA });
 	});
 });
 

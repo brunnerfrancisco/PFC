@@ -96,7 +96,7 @@ celda([4,10],firme).
 estaEn([l,l1,2],[1,6]).
 estaEn([l,l2,1],[2,6]).
 estaEn([r,r1,si],[3,7]).
-estaEn([r,r2,no],[4,7]).
+estaEn([r,r2,si],[4,7]).
 estaEn([o,o1,1],[1,9]).
 estaEn([o,o2,2],[2,9]).
 estaEn([o,o3,3],[3,9]).
