@@ -13,9 +13,9 @@ input[type="text"] {
 button{
     font-size: small;
 }
-select{
+/* select{
     font-size: x-small;
-}
+} */
 
 .celda {
     border-radius: 10px;

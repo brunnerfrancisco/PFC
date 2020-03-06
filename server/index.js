@@ -10,7 +10,7 @@ const server = http.createServer(app);
 const io = socketIO.listen(server);
 const ReadLine = SerialPort.parsers.Readline;
 
-swipl.call('consult("busqueda.pl")');
+//swipl.call('consult("busqueda.pl")');
 
 app.set('port', process.env.PORT || 1100);
 
@@ -143,8 +143,8 @@ function getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion_old, orie
 	let elementsId = { celda: {}, image: {} };
 	elementsId['celda']['old'] = 'celda(' + pos_x_i + ',' + pos_y_i + ')';
 	elementsId['celda']['new'] = 'celda(' + pos_x_f + ',' + pos_y_f + ')';
-	elementsId['image']['old'] = 'celda(' + pos_x_i + ',' + pos_y_i + ')_'+entidad+'_' + orientacion_old;
-	elementsId['image']['new'] = 'celda(' + pos_x_f + ',' + pos_y_f + ')_'+entidad+'_' + orientacion_new;
+	elementsId['image']['old'] = 'celda(' + pos_x_i + ',' + pos_y_i + ')_' + entidad + '_' + orientacion_old;
+	elementsId['image']['new'] = 'celda(' + pos_x_f + ',' + pos_y_f + ')_' + entidad + '_' + orientacion_new;
 	return elementsId;
 }
 
@@ -161,6 +161,8 @@ function getElementsIdObjetos(pos_x, pos_y, objeto) {
 
 
 io.on('connection', function (socket) {
+	//query = new swipl.Query('retractall(_)');
+	swipl.call('consult("busqueda.pl").');
 	console.log('connection established', socket.id);
 
 	socket.on('load_map', ({ estadoInicialJugador, estadoInicialIA }, respuesta) => {
@@ -241,7 +243,7 @@ io.on('connection', function (socket) {
 								if (tengoLlaveConAccesos()) {
 									elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
 										estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f, estadoJugador['orientacion'],
-										estadoJugador['orientacion'],'j');
+										estadoJugador['orientacion'], 'j');
 									estadoJugador['posicion']['pos_x'] = pos_x_f;
 									estadoJugador['posicion']['pos_y'] = pos_y_f;
 									estadoJugador['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
@@ -287,7 +289,7 @@ io.on('connection', function (socket) {
 					} else { // si no hay refugio ni obstaculo actualizo el estado
 						elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
 							estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f,
-							estadoJugador['orientacion'], estadoJugador['orientacion'],'j');
+							estadoJugador['orientacion'], estadoJugador['orientacion'], 'j');
 						estadoJugador['posicion']['pos_x'] = pos_x_f;
 						estadoJugador['posicion']['pos_y'] = pos_y_f;
 						estadoJugador['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
@@ -417,8 +419,8 @@ io.on('connection', function (socket) {
 						}
 					} else {
 						if (suelo_int == 'lava') {
-							if (suelo_fin != 'resbaladizo') { 
-								if(suelo_ini!='resbaladizo') { // aca puedo realizar el salto
+							if (suelo_fin != 'resbaladizo') {
+								if (suelo_ini != 'resbaladizo') { // aca puedo realizar el salto
 									elementsId = getElementsId(estadoJugador['posicion']['pos_x'],
 										estadoJugador['posicion']['pos_y'], pos_x_f, pos_y_f,
 										estadoJugador['orientacion'], estadoJugador['orientacion'], 'j');
@@ -505,9 +507,11 @@ io.on('connection', function (socket) {
 		let msg = "";
 		let elementsId = getElementsIdObjetos(estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'], 'llave');
 		let index_llave = -1;
+		let llave_r = null;
 		elementos.llaves.some((llave, index) => {
 			if (llave.pos_x == estadoJugador['posicion']['pos_x'] && llave.pos_y == estadoJugador['posicion']['pos_y']) {
 				index_llave = index;
+				llave_r = llave;
 				return true;
 			}
 		});
@@ -515,7 +519,18 @@ io.on('connection', function (socket) {
 			estadoJugador['camino'].push('levantar_llave(' + estadoJugador['posicion']['pos_x'] + ',' +
 				estadoJugador['posicion']['pos_y'] + ')');
 			estadoJugador['poseciones']['llaves'].push(elementos.llaves[index_llave]);
+			console.log(elementos.llaves[index_llave]);
+			let llave_s = '[l,' + llave_r.name + ',' + llave_r.accesos + '],[' + llave_r.pos_x + ',' + llave_r.pos_y + ']';
+			query = new swipl.Query('retract(estaEn(' + llave_s + ')).');
+			ret = null;
+			if (ret = query.next()) {
+				console.log("La llave: " + llave_s + " se elimino correctamente");
+			}
+			query.close();
 			elementos['llaves'].splice(index_llave, 1);
+
+
+			//query = new swipl.Query('retract()');
 		} else {
 			msg = "ERROR levantar_llave: No existe llave en celda(" + estadoJugador['posicion']['pos_x'] + "," +
 				estadoJugador['posicion']['pos_y'] + ")";
@@ -530,18 +545,29 @@ io.on('connection', function (socket) {
 		let msg = "";
 		let elementsId = getElementsIdObjetos(estadoJugador['posicion']['pos_x'], estadoJugador['posicion']['pos_y'], 'pala');
 		let index_pala = -1;
+		let pala_r = null;
 		elementos.palas.some((pala, index) => {
 			if (pala.pos_x == estadoJugador['posicion']['pos_x'] && pala.pos_y == estadoJugador['posicion']['pos_y']) {
 				index_pala = index;
+				pala_r = pala;
 				return true;
 			}
 		});
 		if (index_pala >= 0) {
 			estadoJugador['camino'].push('levantar_pala(' + estadoJugador['posicion']['pos_x'] + ',' +
 				estadoJugador['posicion']['pos_y'] + ')');
+			let pala_s = '[p,' + pala_r.name + '],[' + pala_r.pos_x + ',' + pala_r.pos_y + ']';
 			estadoJugador['poseciones']['palas'].push(elementos.palas[index_pala]);
-			estadoJugador['costo'] = estadoJugador['costo'] + 1;
+			query = new swipl.Query('retract(estaEn(' + pala_s + ')).');
+			ret = null;
+			if (ret = query.next()) {
+				console.log("La pala: " + pala_s + " se elimino correctamente");
+			}
+			query.close();
 			elementos['palas'].splice(index_pala, 1);
+			elementos['palas'].splice(index_pala, 1);
+			estadoJugador['costo'] = estadoJugador['costo'] + 1;
+
 		} else {
 			msg = "ERROR levantar_pala: No existe pala en celda(" + estadoJugador['posicion']['pos_x'] + "," +
 				estadoJugador['posicion']['pos_y'] + ")";
@@ -554,22 +580,22 @@ io.on('connection', function (socket) {
 	socket.on('jugar_IA', (respuesta) => {
 		//aca va a ir toda la jugada de la IA
 		// armar estado incial a partir del estado de la IA
-		let poseciones_s="";
+		let poseciones_s = "";
 		estadoIA['poseciones']['palas'].forEach((element) => {
-			if(poseciones_s==""){
-				poseciones_s = "[p,"+element.name+"]";
+			if (poseciones_s == "") {
+				poseciones_s = "[p," + element.name + "]";
 			} else {// esto no se deberia ejecutar nunca porque no deberia tener poder tener mas de una pala
-				poseciones_s += ",[p,"+element.name+"]";
+				poseciones_s += ",[p," + element.name + "]";
 			}
 		});
 		estadoIA['poseciones']['llaves'].forEach((element) => {
-			if(poseciones_s==""){
-				poseciones_s = "[l,"+element.name+","+element.accesos+"]";
+			if (poseciones_s == "") {
+				poseciones_s = "[l," + element.name + "," + element.accesos + "]";
 			} else {
-				poseciones_s += ",[l,"+element.name+","+element.accesos+"]";
+				poseciones_s += ",[l," + element.name + "," + element.accesos + "]";
 			}
 		});
-		poseciones_s = "["+poseciones_s+"]";
+		poseciones_s = "[" + poseciones_s + "]";
 
 		let estadoInicial = "[[" + estadoIA['posicion']['pos_x'] + "," + estadoIA['posicion']['pos_y'] +
 			"]," + estadoIA['orientacion'].toLowerCase() + "," + poseciones_s + "]";
@@ -591,234 +617,259 @@ io.on('connection', function (socket) {
 		//console.log(proxima_accion);
 		//console.log(proxima_accion.args);
 		//console.log(proxima_accion.args[0].tail);
-		if (proxima_accion.name) { // girar, levantar_pala, levantar_llave
-			switch (proxima_accion.name) {
-				case 'girar': { // en args esta la orientacion a la que quiere girar
-					accion = 'girar';
-					let orientacion_f = proxima_accion.args[0].toUpperCase();
-					let orientacion = estadoIA['orientacion'];
-					let pos_x,pos_y;
-					pos_x = estadoIA['posicion']['pos_x'];
-					pos_y = estadoIA['posicion']['pos_y'];
-					elementsId = getElementsId(pos_x, pos_y, pos_x, pos_y, orientacion, orientacion_f, 'ia');
-					estadoIA['orientacion'] = orientacion_f;
-					estadoIA['camino'].push('girar('+orientacion_f+')');
-					switch (orientacion) {
-						case 'N': {
-							if (estadoIA['orientacion'] == 'S') {
-								estadoIA['costo'] = estadoIA['costo'] + 2;
-							} else {
-								estadoIA['costo'] = estadoIA['costo'] + 1;
+		if (proxima_accion){
+			if (proxima_accion.name) { // girar, levantar_pala, levantar_llave
+				switch (proxima_accion.name) {
+					case 'girar': { // en args esta la orientacion a la que quiere girar
+						accion = 'girar';
+						let orientacion_f = proxima_accion.args[0].toUpperCase();
+						let orientacion = estadoIA['orientacion'];
+						let pos_x, pos_y;
+						pos_x = estadoIA['posicion']['pos_x'];
+						pos_y = estadoIA['posicion']['pos_y'];
+						elementsId = getElementsId(pos_x, pos_y, pos_x, pos_y, orientacion, orientacion_f, 'ia');
+						estadoIA['orientacion'] = orientacion_f;
+						estadoIA['camino'].push('girar(' + orientacion_f + ')');
+						switch (orientacion) {
+							case 'N': {
+								if (estadoIA['orientacion'] == 'S') {
+									estadoIA['costo'] = estadoIA['costo'] + 2;
+								} else {
+									estadoIA['costo'] = estadoIA['costo'] + 1;
+								}
+								break;
 							}
-							break;
-						}
-						case 'O': {
-							if (estadoIA['orientacion'] == 'E') {
-								estadoIA['costo'] = estadoIA['costo'] + 2;
-							} else {
-								estadoIA['costo'] = estadoIA['costo'] + 1;
+							case 'O': {
+								if (estadoIA['orientacion'] == 'E') {
+									estadoIA['costo'] = estadoIA['costo'] + 2;
+								} else {
+									estadoIA['costo'] = estadoIA['costo'] + 1;
+								}
+								break;
 							}
-							break;
-						}
-						case 'S': {
-							if (estadoIA['orientacion'] == 'N') {
-								estadoIA['costo'] = estadoIA['costo'] + 2;
-							} else {
-								estadoIA['costo'] = estadoIA['costo'] + 1;
+							case 'S': {
+								if (estadoIA['orientacion'] == 'N') {
+									estadoIA['costo'] = estadoIA['costo'] + 2;
+								} else {
+									estadoIA['costo'] = estadoIA['costo'] + 1;
+								}
+								break;
 							}
-							break;
-						}
-						case 'E': {
-							if (estadoIA['orientacion'] == 'O') {
-								estadoIA['costo'] = estadoIA['costo'] + 2;
-							} else {
-								estadoIA['costo'] = estadoIA['costo'] + 1;
+							case 'E': {
+								if (estadoIA['orientacion'] == 'O') {
+									estadoIA['costo'] = estadoIA['costo'] + 2;
+								} else {
+									estadoIA['costo'] = estadoIA['costo'] + 1;
+								}
+								break;
 							}
-							break;
 						}
+						break;
 					}
-					break;
-				}
-				case 'levantar_pala': { // en args hay un arreglo que tiene la info de la pala
-					accion = 'levantar_pala';
-					//nombre_pala = proxima_accion.args[0].tail.head;
-					let pos_pala = {pos_x:estadoIA['posicion']['pos_x'], pos_y:estadoIA['posicion']['pos_y']};
-					elementsId = getElementsIdObjetos(pos_pala.pos_x, pos_pala.pos_y, 'pala');
-					let index_pala = -1;
-					elementos.palas.some((pala, index) => {
-						if (pala.pos_x == pos_pala.pos_x && pala.pos_y == pos_pala.pos_y) {
-							index_pala = index;
-							return true;
-						}
-					});
-					estadoIA['poseciones']['palas'].push(elementos.palas[index_pala]);
-					elementos['palas'].splice(index_pala, 1);
-					estadoIA['camino'].push('levantar_pala(' + pos_pala.pos_x + ',' + pos_pala.pos_y + ')');
-					estadoIA['costo'] = estadoIA['costo'] + 1;
-					break;
-				}
-				case 'levantar_llave': { // en agrs hay un arreglo que tiene la info de la llave
-					accion = 'levantar_llave';
-					let pos_llave = {pos_x:estadoIA['posicion']['pos_x'], pos_y:estadoIA['posicion']['pos_y']};
-					elementsId = getElementsIdObjetos(pos_llave.pos_x, pos_llave.pos_y, 'llave');
-					let index_llave = -1;
-					elementos.llaves.some((llave, index) => {
-						if (llave.pos_x == pos_llave.pos_x && llave.pos_y == pos_llave.pos_y) {
-							index_llave = index;
-							return true;
-						}
-					});
-					estadoIA['poseciones']['llaves'].push(elementos.llaves[index_llave]);
-					elementos['llaves'].splice(index_llave, 1);
-					estadoIA['camino'].push('levantar_llave(' + pos_llave.pos_x + ',' + pos_llave.pos_y + ')');
-					break;
-				}
-			}
-		} else { // avanzar, saltar_lava, saltar_obstaculo
-			switch (proxima_accion) {
-				case 'avanzar': {
-					accion = 'avanzar';
-					// obtener los ids y actualizar estado
-					let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
-					pos_x_i = estadoIA['posicion']['pos_x'];
-					pos_y_i = estadoIA['posicion']['pos_y'];
-					orientacion = estadoIA['orientacion']
-					switch (orientacion) {
-						case 'N': {
-							pos_x_f = estadoIA['posicion']['pos_x'] - 1;
-							pos_y_f = estadoIA['posicion']['pos_y'];
-							break;
-						}
-						case 'O': {
-							pos_x_f = estadoIA['posicion']['pos_x'];
-							pos_y_f = estadoIA['posicion']['pos_y'] - 1;
-							break;
-						}
-						case 'S': {
-							pos_x_f = estadoIA['posicion']['pos_x'] + 1;
-							pos_y_f = estadoIA['posicion']['pos_y'];
-							break;
-						}
-						case 'E': {
-							pos_x_f = estadoIA['posicion']['pos_x'];
-							pos_y_f = estadoIA['posicion']['pos_y'] + 1;
-							break;
-						}
-					}
-					elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
-					estadoIA['posicion']['pos_x'] = pos_x_f;
-					estadoIA['posicion']['pos_y'] = pos_y_f;
-					estadoIA['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
-					query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo)');
-					ret = null;
-					if (ret = query.next()) {
-						suelo = ret.Suelo;
-					}
-					query.close();
-					if (suelo == 'firme') {
-						estadoIA['costo'] = estadoIA['costo'] + 1;
-					} else if (suelo == 'resbaladizo') {
-						estadoIA['costo'] = estadoIA['costo'] + 2;
-					}
-					if (elementos['refugios']['pos_x'] == pos_x_f && elementos['refugios']['pos_y'] == pos_y_f
-						&& elementos['refugios']['req_key'] == 'si') {
-						// si la posicion a la que avanzo poseia un refugio que requiere llave
-						// agarro una llave de las poseciones y le decremento la cantidad de accesos
-						let index_llave = -1;
-						estadoIA['poseciones']['llaves'].some((llave, index) => {
-							if (llave['accesos'] > 0) {
-								index_llave = index;
+					case 'levantar_pala': { // en args hay un arreglo que tiene la info de la pala
+						accion = 'levantar_pala';
+						let nombre_pala = proxima_accion.args[0].tail.head;
+						let pos_pala = { pos_x: estadoIA['posicion']['pos_x'], pos_y: estadoIA['posicion']['pos_y'] };
+						elementsId = getElementsIdObjetos(pos_pala.pos_x, pos_pala.pos_y, 'pala');
+						let index_pala = -1;
+						let pala_r = null;
+						elementos.palas.some((pala, index) => {
+							if (pala.pos_x == pos_pala.pos_x && pala.pos_y == pos_pala.pos_y) {
+								index_pala = index;
+								pala_r = pala;
 								return true;
 							}
 						});
-						estadoIA['poseciones']['llaves'][index_llave]['accesos'] = estadoIA['poseciones']['llaves'][index_llave]['accesos'] - 1;
+						let pala_s = '[p,' + nombre_pala + '],[' + pala_r.pos_x + ',' + pala_r.pos_y + ']';
+						query = new swipl.Query('retract(estaEn(' + pala_s + ')).');
+						ret = null;
+						if (ret = query.next()) {
+							console.log("La pala: " + pala_s + " se elimino correctamente");
+						}
+						query.close();
+						estadoIA['poseciones']['palas'].push(elementos.palas[index_pala]);
+						elementos['palas'].splice(index_pala, 1);
+						estadoIA['camino'].push('levantar_pala(' + pos_pala.pos_x + ',' + pos_pala.pos_y + ')');
+						estadoIA['costo'] = estadoIA['costo'] + 1;
+						break;
 					}
-					break;
+					case 'levantar_llave': { // en agrs hay un arreglo que tiene la info de la llave
+						accion = 'levantar_llave';
+						let nombre_llave = proxima_accion.args[0].tail.head;
+						let accesos_llave = proxima_accion.args[0].tail.tail.head;
+						let pos_llave = { pos_x: estadoIA['posicion']['pos_x'], pos_y: estadoIA['posicion']['pos_y'] };
+						elementsId = getElementsIdObjetos(pos_llave.pos_x, pos_llave.pos_y, 'llave');
+						let index_llave = -1;
+						let llave_r = null;
+						elementos.llaves.some((llave, index) => {
+							if (llave.pos_x == pos_llave.pos_x && llave.pos_y == pos_llave.pos_y) {
+								index_llave = index;
+								llave_r = llave;
+								return true;
+							}
+						});
+						let llave_s = '[l,' + nombre_llave + ',' + accesos_llave + '],[' + llave_r.pos_x + ',' + llave_r.pos_y + ']';
+						query = new swipl.Query('retract(estaEn(' + llave_s + ')).');
+						ret = null;
+						if (ret = query.next()) {
+							console.log("La llave: " + llave_s + " se elimino correctamente");
+						}
+						query.close();
+						estadoIA['poseciones']['llaves'].push(elementos.llaves[index_llave]);
+						elementos['llaves'].splice(index_llave, 1);
+						estadoIA['camino'].push('levantar_llave(' + pos_llave.pos_x + ',' + pos_llave.pos_y + ')');
+						break;
+					}
 				}
-				case 'saltar_lava': {
-					accion = 'saltar_lava';
-					let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
-					pos_x_i = estadoIA['posicion']['pos_x'];
-					pos_y_i = estadoIA['posicion']['pos_y'];
-					orientacion = estadoIA['orientacion']
-					switch (orientacion) {
-						case 'N': {
-							pos_x_f = estadoIA['posicion']['pos_x'] - 2;
-							pos_y_f = estadoIA['posicion']['pos_y'];
-							break;
+			} else { // avanzar, saltar_lava, saltar_obstaculo
+				switch (proxima_accion) {
+					case 'avanzar': {
+						accion = 'avanzar';
+						// obtener los ids y actualizar estado
+						let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
+						pos_x_i = estadoIA['posicion']['pos_x'];
+						pos_y_i = estadoIA['posicion']['pos_y'];
+						orientacion = estadoIA['orientacion']
+						switch (orientacion) {
+							case 'N': {
+								pos_x_f = estadoIA['posicion']['pos_x'] - 1;
+								pos_y_f = estadoIA['posicion']['pos_y'];
+								break;
+							}
+							case 'O': {
+								pos_x_f = estadoIA['posicion']['pos_x'];
+								pos_y_f = estadoIA['posicion']['pos_y'] - 1;
+								break;
+							}
+							case 'S': {
+								pos_x_f = estadoIA['posicion']['pos_x'] + 1;
+								pos_y_f = estadoIA['posicion']['pos_y'];
+								break;
+							}
+							case 'E': {
+								pos_x_f = estadoIA['posicion']['pos_x'];
+								pos_y_f = estadoIA['posicion']['pos_y'] + 1;
+								break;
+							}
 						}
-						case 'O': {
-							pos_x_f = estadoIA['posicion']['pos_x'];
-							pos_y_f = estadoIA['posicion']['pos_y'] - 2;
-							break;
+						elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
+						estadoIA['posicion']['pos_x'] = pos_x_f;
+						estadoIA['posicion']['pos_y'] = pos_y_f;
+						estadoIA['camino'].push('avanzar(' + pos_x_f + ',' + pos_y_f + ')');
+						query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo)');
+						ret = null;
+						if (ret = query.next()) {
+							suelo = ret.Suelo;
 						}
-						case 'S': {
-							pos_x_f = estadoIA['posicion']['pos_x'] + 2;
-							pos_y_f = estadoIA['posicion']['pos_y'];
-							break;
+						query.close();
+						if (suelo == 'firme') {
+							estadoIA['costo'] = estadoIA['costo'] + 1;
+						} else if (suelo == 'resbaladizo') {
+							estadoIA['costo'] = estadoIA['costo'] + 2;
 						}
-						case 'E': {
-							pos_x_f = estadoIA['posicion']['pos_x'];
-							pos_y_f = estadoIA['posicion']['pos_y'] + 2;
-							break;
+						if (elementos['refugios']['pos_x'] == pos_x_f && elementos['refugios']['pos_y'] == pos_y_f
+							&& elementos['refugios']['req_key'] == 'si') {
+							// si la posicion a la que avanzo poseia un refugio que requiere llave
+							// agarro una llave de las poseciones y le decremento la cantidad de accesos
+							let index_llave = -1;
+							estadoIA['poseciones']['llaves'].some((llave, index) => {
+								if (llave['accesos'] > 0) {
+									index_llave = index;
+									return true;
+								}
+							});
+							estadoIA['poseciones']['llaves'][index_llave]['accesos'] = estadoIA['poseciones']['llaves'][index_llave]['accesos'] - 1;
 						}
+						break;
 					}
-					elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
-					estadoIA['posicion']['pos_x'] = pos_x_f;
-					estadoIA['posicion']['pos_y'] = pos_y_f;
-					estadoIA['camino'].push('saltar_lava(' + pos_x_f + ',' + pos_y_f + ')');
-					estadoIA['costo'] = estadoIA['costo'] + 3;
-					break;
-				}
-				case 'saltar_obstaculo': {
-					accion = 'saltar_obstaculo';
-					let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
-					pos_x_i = estadoIA['posicion']['pos_x'];
-					pos_y_i = estadoIA['posicion']['pos_y'];
-					orientacion = estadoIA['orientacion']
-					switch (orientacion) {
-						case 'N': {
-							pos_x_f = estadoIA['posicion']['pos_x'] - 2;
-							pos_y_f = estadoIA['posicion']['pos_y'];
-							break;
+					case 'saltar_lava': {
+						accion = 'saltar_lava';
+						let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
+						pos_x_i = estadoIA['posicion']['pos_x'];
+						pos_y_i = estadoIA['posicion']['pos_y'];
+						orientacion = estadoIA['orientacion']
+						switch (orientacion) {
+							case 'N': {
+								pos_x_f = estadoIA['posicion']['pos_x'] - 2;
+								pos_y_f = estadoIA['posicion']['pos_y'];
+								break;
+							}
+							case 'O': {
+								pos_x_f = estadoIA['posicion']['pos_x'];
+								pos_y_f = estadoIA['posicion']['pos_y'] - 2;
+								break;
+							}
+							case 'S': {
+								pos_x_f = estadoIA['posicion']['pos_x'] + 2;
+								pos_y_f = estadoIA['posicion']['pos_y'];
+								break;
+							}
+							case 'E': {
+								pos_x_f = estadoIA['posicion']['pos_x'];
+								pos_y_f = estadoIA['posicion']['pos_y'] + 2;
+								break;
+							}
 						}
-						case 'O': {
-							pos_x_f = estadoIA['posicion']['pos_x'];
-							pos_y_f = estadoIA['posicion']['pos_y'] - 2;
-							break;
-						}
-						case 'S': {
-							pos_x_f = estadoIA['posicion']['pos_x'] + 2;
-							pos_y_f = estadoIA['posicion']['pos_y'];
-							break;
-						}
-						case 'E': {
-							pos_x_f = estadoIA['posicion']['pos_x'];
-							pos_y_f = estadoIA['posicion']['pos_y'] + 2;
-							break;
-						}
+						elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
+						estadoIA['posicion']['pos_x'] = pos_x_f;
+						estadoIA['posicion']['pos_y'] = pos_y_f;
+						estadoIA['camino'].push('saltar_lava(' + pos_x_f + ',' + pos_y_f + ')');
+						estadoIA['costo'] = estadoIA['costo'] + 3;
+						break;
 					}
-					elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
-					estadoIA['posicion']['pos_x'] = pos_x_f;
-					estadoIA['posicion']['pos_y'] = pos_y_f;
-					estadoIA['camino'].push('saltar_obstaculo(' + pos_x_f + ',' + pos_y_f + ')');
-					query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo)');
-					ret = null;
-					if (ret = query.next()) {
-						suelo = ret.Suelo;
+					case 'saltar_obstaculo': {
+						accion = 'saltar_obstaculo';
+						let pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, suelo;
+						pos_x_i = estadoIA['posicion']['pos_x'];
+						pos_y_i = estadoIA['posicion']['pos_y'];
+						orientacion = estadoIA['orientacion']
+						switch (orientacion) {
+							case 'N': {
+								pos_x_f = estadoIA['posicion']['pos_x'] - 2;
+								pos_y_f = estadoIA['posicion']['pos_y'];
+								break;
+							}
+							case 'O': {
+								pos_x_f = estadoIA['posicion']['pos_x'];
+								pos_y_f = estadoIA['posicion']['pos_y'] - 2;
+								break;
+							}
+							case 'S': {
+								pos_x_f = estadoIA['posicion']['pos_x'] + 2;
+								pos_y_f = estadoIA['posicion']['pos_y'];
+								break;
+							}
+							case 'E': {
+								pos_x_f = estadoIA['posicion']['pos_x'];
+								pos_y_f = estadoIA['posicion']['pos_y'] + 2;
+								break;
+							}
+						}
+						elementsId = getElementsId(pos_x_i, pos_y_i, pos_x_f, pos_y_f, orientacion, orientacion, 'ia');
+						estadoIA['posicion']['pos_x'] = pos_x_f;
+						estadoIA['posicion']['pos_y'] = pos_y_f;
+						estadoIA['camino'].push('saltar_obstaculo(' + pos_x_f + ',' + pos_y_f + ')');
+						query = new swipl.Query('celda([' + pos_x_f + ',' + pos_y_f + '],Suelo)');
+						ret = null;
+						if (ret = query.next()) {
+							suelo = ret.Suelo;
+						}
+						query.close();
+						if (suelo == 'firme') {
+							estadoIA['costo'] = estadoIA['costo'] + 4;
+						} else if (suelo == 'resbaladizo') {
+							estadoIA['costo'] = estadoIA['costo'] + 5;
+						}
+						break;
 					}
-					query.close();
-					if(suelo=='firme'){
-						estadoIA['costo'] = estadoIA['costo'] + 4;
-					} else if(suelo == 'resbaladizo') {
-						estadoIA['costo'] = estadoIA['costo'] + 5;
-					}
-					break;
 				}
 			}
+		} else {
+			accion = 'ganador';
+			console.log('No es posible hallar un plan');
 		}
 
-		respuesta({ accion:accion, elementsId: elementsId, estado: estadoIA });
+		respuesta({ accion: accion, elementsId: elementsId, estado: estadoIA });
 	});
 });
 

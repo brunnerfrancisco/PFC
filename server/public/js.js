@@ -1,9 +1,8 @@
 const socket = io();
 
-var elementos = {};
 var mapa_cargado = false;
 
-function cargarObjetos(pos_x, pos_y, col) {
+function cargarObjetos(pos_x, pos_y, col, elementos) {
 	let { refugios, obstaculos, llaves, palas } = elementos;
 	let img;
 	refugios.forEach((refugio) => {
@@ -83,7 +82,6 @@ function cargar_mapa() {
 		({ mapa, valid, objetos }) => {
 			if (valid.valid_j) {
 				if (valid.valid_ia) {
-					elementos = objetos;
 					Object.keys(mapa).map((row, indexRow) => {
 						rowElement = document.createElement('tr');
 						Object.keys(mapa[row]).map((col, indexCol) => {
@@ -92,7 +90,7 @@ function cargar_mapa() {
 							switch (mapa[row][col].suelo) {
 								case 'firme': {
 									colElement.setAttribute('class', 'celda text-white bg-success p-3 text-center');
-									cargarObjetos(indexRow + 1, indexCol + 1, colElement);
+									cargarObjetos(indexRow + 1, indexCol + 1, colElement, objetos);
 									break;
 								}
 								case 'lava': {
@@ -101,7 +99,7 @@ function cargar_mapa() {
 								}
 								case 'resbaladizo': {
 									colElement.setAttribute('class', 'celda text-white bg-warning p-3 text-center');
-									cargarObjetos(indexRow + 1, indexCol + 1, colElement);
+									cargarObjetos(indexRow + 1, indexCol + 1, colElement, objetos);
 									break;
 								}
 							}
@@ -278,27 +276,18 @@ function avanzar() {
 					case 0: {
 						actualizarMapa(estado['orientacion'], elementsId);
 						actualizarEstado(estado, 'j');
+						jugarIA();
 						break;
 					}
-					case 1: {
-						console.log(msg);
-						break;
-					}
-					case 2: {
-						console.log(msg);
-						break;
-					}
-					case 3: {
-						console.log(msg);
-						break;
-					}
+					case 1: 
+					case 2: 
+					case 3: 
 					case 4: {
 						console.log(msg);
 						break;
 					}
 				}
 			});
-		jugarIA();
 	} else {
 		console.log("ERROR: El mapa no esta cargado");
 	}
@@ -315,28 +304,14 @@ function saltar() {
 					case 0: {
 						actualizarMapa(estado['orientacion'], elementsId);
 						actualizarEstado(estado, 'j');
+						jugarIA();
 						break;
 					}
-					case 1: {
-						console.log(msg);
-						break;
-					}
-					case 2: {
-						console.log(msg);
-						break;
-					}
-					case 3: {
-						console.log(msg);
-						break;
-					}
-					case 4: {
-						console.log(msg);
-						break;
-					}
-					case 5: {
-						console.log(msg);
-						break;
-					}
+					case 1: 
+					case 2:
+					case 3: 
+					case 4: 
+					case 5: 
 					case 6: {
 						console.log(msg);
 						break;
@@ -355,6 +330,7 @@ function levantar_llave() {
 				if (error == 0) {
 					actualizarMapa(0, elementsId);
 					actualizarEstado(estado, 'j');
+					jugarIA();
 				} else if (error = 1) {
 					console.log(msg);
 				}
@@ -371,6 +347,7 @@ function levantar_pala() {
 				if (error == 0) {
 					actualizarMapa(0, elementsId);
 					actualizarEstado(estado, 'j');
+					jugarIA();
 				} else if (error = 1) {
 					console.log(msg);
 				}
@@ -386,8 +363,8 @@ function girar(value) {
 			({ elementsId, estado }) => {
 				actualizarMapa(value, elementsId);
 				actualizarEstado(estado, 'j');
+				jugarIA();
 			});
-		jugarIA();
 	} else {
 		console.log("ERROR: El mapa no esta cargado");
 	}

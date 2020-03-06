@@ -21,19 +21,24 @@
         y el costo asociado a esa secuencia de operadores
         La busqueda se realiza aplicando el metodo A*
 */
+buscar_plan(EstadoInicial,Metas,Destino,_Plan,_Costo):-
+    retractall(frontera(_)),
+    retractall(visitado(_)),
+    retractall(tupla(_,_,_)),
+    retractall(meta(_)),
+    EstadoInicial = [PosIni,_,[[p,_]]],
+    member(PosIni,Metas),!,
+    nl,write('Ganador'),nl,
+    Destino ='Ganador'.
 buscar_plan(EstadoInicial,Metas,Destino,Plan,Costo):-
     retractall(frontera(_)),
     retractall(visitado(_)),
     retractall(tupla(_,_,_)),
     retractall(meta(_)),
-    /* EstadoInicial = [_,_,[]], */
     agregarTuplasPalaMeta(Metas),
     buscarHeuristica(EstadoInicial,Heuristica),
     assert(frontera(nodo(EstadoInicial,[],0,Heuristica))),
     buscarAE(Destino,Plan,Costo),!.
-/* buscar_plan([_,_,[_]],_,_,_,_):-!,
-    nl,write('La Lista de Posesiones del Estado Inicial debe estar vacia'),nl,
-    fail. */
 buscar_plan(_,_,_,_,_):-
     nl,write('No es posible hallar un plan'),nl,
     fail.
