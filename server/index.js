@@ -16,7 +16,7 @@ const port = new SerialPort('COM5', {
 
 //swipl.call('consult("busqueda.pl")');
 
-app.set('port', process.env.PORT || 1100);
+app.set('port', process.env.PORT || 3001);
 
 app.use(express.static(path.join(__dirname, 'public')));
 

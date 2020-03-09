@@ -194,6 +194,8 @@ function cargar_mapa() {
 					});
 					document.getElementById('btn_cargar_mapa').setAttribute('disabled', 'true');
 					document.getElementById('btn_cargar_mapa').setAttribute('class', 'btn-disabled btn-block rounded ');
+					actualizarEstado(estadoInicialJugador,'j');
+					actualizarEstado(estadoInicialIA,'ia');
 					mapa_cargado = true;
 				} else {
 					console.log("ERROR Cargar Mapa: La Posición de la IA indicada no es válida");
@@ -210,18 +212,18 @@ function actualizarEstado(estado, entidad) {
 	document.getElementById('estado_orientacion_' + entidad).innerHTML = estado['orientacion'];
 	var html_camino = "";
 	estado['camino'].forEach((camino) => {
-		html_camino = html_camino + "<li>" + camino + "</li>";
+		html_camino = html_camino + "<li class='list-group-item'>" + camino + "</li>";
 	});
 	document.getElementById('estado_camino_' + entidad).innerHTML = html_camino;
 	document.getElementById('estado_costo_' + entidad).innerHTML = estado['costo'];
 	var html_llaves = "";
 	estado['poseciones']['llaves'].forEach((llave) => {
-		html_llaves = html_llaves + "<li>llave(" + llave['name'] + "," + llave['accesos'] + ")</li>";
+		html_llaves = html_llaves + "<li class='list-group-item'>llave(" + llave['name'] + "," + llave['accesos'] + ")</li>";
 	});
 	document.getElementById('estado_llaves_' + entidad).innerHTML = html_llaves;
 	var html_palas = "";
 	estado['poseciones']['palas'].forEach((pala) => {
-		html_palas = html_palas + "<li>pala(" + pala['name'] + ")</li>";
+		html_palas = html_palas + "<li class='list-group-item'>pala(" + pala['name'] + ")</li>";
 	});
 	document.getElementById('estado_palas_' + entidad).innerHTML = html_palas;
 }
